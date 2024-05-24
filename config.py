@@ -1,6 +1,7 @@
 import pygame
+
 pygame.init()
-#Colors
+# Colors
 LIGHTBLUE = (72, 128, 247)
 AZURE = (240, 255, 255)
 DARK_GREY = (169, 169, 169)
@@ -17,25 +18,22 @@ FPS = 60
 
 TILESIZE = 64
 
-PLAYER_LAYER = 3 
-BLOCK_LAYER = 2 
+PLAYER_LAYER = 3
+BLOCK_LAYER = 2
 GROUND_LAYER = 1
 
 PLAYER_SPEED = 3
 ENEMY_SPEED = 1
 
-GROUND_LAYER = 1
 
-
-
-#MAP  150x100xTILESIZE px
+# MAP  150x100xTILESIZE px
 
 tilemap = """
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 B..............TTT.................................................................................B
 B..............TTT.................................................................................B
 B..............TTT...........................................................TTT...................B
-B.............TTT.........................................................TTTTTTT...TTT...........B
+B..............TTT.........................................................TTTTTTT...TTT...........B
 B..............TTT.........................................D..............TTTD..TTT..TTTT..........B
 B..............TTT............TTTTTT..TTTT............TTTTTT.............TTT.....TTTTT.TTT.........B
 B..............TTT..........TTTTTTTTTTTTTTTD.........TTTTTTTTT....TTTTTTTTT......TTTTT...TTT.......B
@@ -48,7 +46,7 @@ B....................TT.....................................TTT.................
 B....................TT.....................................TTTTTTTTT............TTT...TTTT........B
 B...................TTT......P..............OOOOO............TTTTTTTTTTTT........TTTTTTTTTT........B
 B.................TTTT................OOOOOOWWWWWWOOOOOOOO.........TTTTTTT.....TTTDTTTTT...........B
-B.........E.....TTTTD.........OOOOOOOOOWWWWWWWWWWWWWWWWWWOOOOOOO........TTT...TTT..................B
+B.........e.....TTTTD.........OOOOOOOOOWWWWWWWWWWWWWWWWWWOOOOOOO........TTT...TTT..................B
 B..............TTT......OOOOOOWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWOOOO......TTTTTT...................B
 B..............TTT..OOOOOWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWOOOOOO..TTTT....................B
 B.............TTT..OWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWO..TTTOOOOOOOOOOOOOOOOOOOOB
@@ -68,7 +66,7 @@ B............TTT......................................TTTD.TT...................
 B...........DTTT......................................TTTTTT.......................................B
 B............TTT...................................DTTT..TTT.......................................B
 B.............TTT..............TTT................TTTT...TTT.......................................B
-B..............TTTTD.........TTTTTTT...........TTTT......TTT......................................B
+B..............TTTTD.........TTTTTTT...........TTTT......TTT.......................................B
 B...............TTTTT......TTTTTTTTTTD........TTT.........TTT......................................B
 B................TTTTTTTTTTTT.....TTTTTTT......TTTD.........TTT....................................B
 B...................TTTTTTTD.........TTTTTTTTTTT.............TTTT..................................B
