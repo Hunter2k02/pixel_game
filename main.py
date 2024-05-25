@@ -34,6 +34,7 @@ class Game:
         self.terrain_spritesheet = Spritesheet("images/terrain/terrain.png")
         self.attack_spritesheet = Spritesheet("images/missles/spikes.png")
         self.ultimate_attack_spritesheet = Spritesheet("images/missles/tornado.png")
+        self.mana_cost = 10
 
         pygame.mouse.set_visible(False)
         self.cursor = Cursor(self)
@@ -156,6 +157,20 @@ class Game:
                             1,
                             5,
                             1,
+                            1,
+                        ).draw(self.screen)
+                    elif column == "a":
+                        Enemy(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_1/brown_mouse_assassin.png",
+                            "images/enemies/level_1/brown_mouse_assassin_attack.png",
+                            "Brown Mouse",
+                            3,
+                            10,
+                            3,
+                            1,
                         ).draw(self.screen)
 
                     elif column == "W":
@@ -228,6 +243,7 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.ultimate_attack_level += 1
+                    self.mana_cost = 10 + self.player.ultimate_attack_level
                     self.paused_game = False
             elif self.options[5].text == "+":
                 self.options[5].color = DARK_GREY
@@ -241,7 +257,8 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.speed_level += 1
-                    self.max_cooldown -= 5
+
+                    self.max_cooldown -= 2
                     self.paused_game = False
             elif self.options[6].text == "+":
                 self.options[6].color = DARK_GREY
@@ -255,6 +272,12 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.health_and_mana_level += 1
+                    self.mana_bar.full += 20 * self.player.health_and_mana_level
+                    self.mana_bar.regen *= 2
+                    self.mana_bar.remaining = self.mana_bar.full
+                    self.health_bar.full += 20 * self.player.health_and_mana_level
+                    self.health_bar.regen *= 2
+                    self.health_bar.remaining = self.health_bar.full
                     self.paused_game = False
             elif self.options[7].text == "+":
                 self.options[7].color = DARK_GREY
@@ -322,9 +345,12 @@ class Game:
                 if event.button == 2:
                     self.experience_bar.get(100000)
 
-            if event.type == pygame.MOUSEBUTTONDOWN and self.mana_bar.remaining >= 10:
+            if (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and self.mana_bar.remaining >= self.mana_cost
+            ):
                 if event.button == 3:
-                    self.mana_bar.lose(10)
+                    self.mana_bar.lose(self.mana_cost)
 
                     if self.player.facing == "up":
                         Ultimate_attack(
@@ -439,7 +465,7 @@ class Game:
                 WIDTH * 0.75,
                 HEIGHT * 0.125,
                 self.player.speed_level,
-                12,
+                10,
                 "grey",
                 "blue",
             ),
@@ -532,8 +558,10 @@ class Game:
                 sprite.draw(self.screen)
 
             self.events_pause()
+            self.cursor.draw(self.screen)
+            self.cursor.update()
             pygame.display.update()
-            pygame.mouse.set_visible(True)
+
             self.clock.tick(FPS)
 
         for sprite in self.options:

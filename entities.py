@@ -222,10 +222,14 @@ class Player(pygame.sprite.Sprite):
                 if self.x_change > 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.x += self.player_speed
+                    for sprite in self.game.attacks:
+                        sprite.rect.x += self.player_speed
                     self.rect.x = hits[0].rect.left - self.rect.width
 
                 if self.x_change < 0:
                     for sprite in self.game.all_sprites:
+                        sprite.rect.x -= self.player_speed
+                    for sprite in self.game.attacks:
                         sprite.rect.x -= self.player_speed
                     self.rect.x = hits[0].rect.right
 
@@ -235,9 +239,13 @@ class Player(pygame.sprite.Sprite):
                 if self.y_change > 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.y += self.player_speed
+                    for sprite in self.game.attacks:
+                        sprite.rect.y += self.player_speed
                     self.rect.y = hits[0].rect.top - self.rect.height
                 if self.y_change < 0:
                     for sprite in self.game.all_sprites:
+                        sprite.rect.y -= self.player_speed
+                    for sprite in self.game.attacks:
                         sprite.rect.y -= self.player_speed
                     self.rect.y = hits[0].rect.bottom
 
@@ -561,14 +569,151 @@ class Ultimate_attack(Attack):
                 384, 384, self.width, self.height, BLACK
             ),
         ]
+
+        self.upgrade_attack_tier(self.game.player.ultimate_attack_level // 3)
         self.image = self.animations[0]
-        self.damage = self.game.player.ultimate_attack_damage
+        self.damage = (
+            self.game.player.ultimate_attack_damage
+            + self.game.player.ultimate_attack_level * 5
+        )
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
 
     def upgrade_attack_tier(self, tier):
-        pass
+
+        if tier == 1:
+            for i in range(len(self.animations)):
+                self.animations[i] = pygame.transform.scale(
+                    self.animations[i], (256, 256)
+                )
+            self.height *= 2
+            self.width *= 2
+
+        elif tier == 2:
+
+            self.game.ultimate_attack_spritesheet = Spritesheet(
+                "images/missles/lightningclaw.png"
+            )
+
+            self.animations = [
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 0, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 0, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 0, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 0, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 128, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 128, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 128, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 128, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 256, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 256, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 256, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 256, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 384, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 384, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 384, self.width, self.height, BLACK
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 384, self.width, self.height, BLACK
+                ),
+            ]
+            for i in range(len(self.animations)):
+                self.animations[i] = pygame.transform.scale(
+                    self.animations[i], (256, 256)
+                )
+            self.height *= 2
+            self.width *= 2
+
+        elif tier >= 3:
+            self.game.ultimate_attack_spritesheet = Spritesheet(
+                "images/missles/ultimate_tornado_thunderclaw.png"
+            )
+
+            self.animations = [
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 0, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 0, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 0, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 0, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 128, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 128, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 128, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 128, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 256, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 256, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 256, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 256, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    0, 384, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    128, 384, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    256, 384, self.width, self.height, WHITE
+                ),
+                self.game.ultimate_attack_spritesheet.get_sprite(
+                    384, 384, self.width, self.height, WHITE
+                ),
+            ]
+            for i in range(len(self.animations)):
+                self.animations[i] = pygame.transform.scale(
+                    self.animations[i], (512, 512)
+                )
+            self.height *= 4
+            self.width *= 4
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
@@ -619,18 +764,33 @@ class Enemy_attack(pygame.sprite.Sprite):
         angle = math.atan2(
             self.game.player.rect.y - self.y, self.game.player.rect.x - self.x
         )
-        self.dx = math.cos(angle) * ENEMY_SPEED * 2
-        self.dy = math.sin(angle) * ENEMY_SPEED * 2
+        self.dx = math.cos(angle) * self.enemy.speed * 2
+        self.dy = math.sin(angle) * self.enemy.speed * 2
 
-        spritesheet = self.enemy.attack
-        self.image = pygame.transform.scale(spritesheet, (12, 16))
-        self.animations = []
-        for i in range(1, 31):
-            self.animations.append(pygame.transform.rotate(self.image, 15 * i))
+        self.spritesheet = self.enemy.enemy_attack_spritesheet
 
+        self.personalize(self.enemy.name)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+    def personalize(self, name):
+        if name == "Grey Mouse":
+            self.image = self.spritesheet.get_sprite(
+                0, 0, self.width, self.height // 2, WHITE
+            )
+            self.image = pygame.transform.scale(self.image, (16, 8))
+            self.animations = [
+                pygame.transform.rotate(self.image, 15 * i) for i in range(1, 25)
+            ]
+
+        if name == "Brown Mouse":
+            self.image = self.spritesheet.get_sprite(0, 0, 16, 8, WHITE)
+            self.image = pygame.transform.scale(self.image, (32, 16))
+            self.animations = [
+                pygame.transform.rotate(self.image, 15 * i) for i in range(1, 25)
+            ]
+            print(self.animations)
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
@@ -648,7 +808,7 @@ class Enemy_attack(pygame.sprite.Sprite):
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
         self.animation_loop += 0.15
-        if self.animation_loop >= 29:
+        if self.animation_loop >= len(self.animations):
             self.kill()
 
     def movement(self):
@@ -668,6 +828,7 @@ class Enemy(pygame.sprite.Sprite):
         damage,
         health,
         exp,
+        speed,
     ):
         self.game = game
         self._layer = PLAYER_LAYER
@@ -688,6 +849,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
 
+        self.speed = speed
         self.name = name
         self.damage = damage
         self.health = health
@@ -740,7 +902,7 @@ class Enemy(pygame.sprite.Sprite):
             enemy_spritesheet.get_sprite(448, 64, self.width, self.height, WHITE),
             enemy_spritesheet.get_sprite(512, 64, self.width, self.height, WHITE),
         ]
-        self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 175, 90, WHITE)
+        self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 64, 32, BLACK)
 
     def draw(self, screen):
         pass
@@ -799,25 +961,25 @@ class Enemy(pygame.sprite.Sprite):
         if self.dist < 750:
             if self.game.player.rect.x > self.rect.x:
 
-                self.rect.x += ENEMY_SPEED
+                self.rect.x += self.speed
                 self.facing = "right"
                 self.x_change = 1
 
             elif self.game.player.rect.x < self.rect.x:
 
-                self.rect.x -= ENEMY_SPEED
+                self.rect.x -= self.speed
                 self.facing = "left"
                 self.x_change = 1
 
             elif self.game.player.rect.y > self.rect.y:
 
-                self.rect.y += ENEMY_SPEED
+                self.rect.y += self.speed
                 self.facing = "down"
                 self.y_change = 1
 
             elif self.game.player.rect.y < self.rect.y:
 
-                self.rect.y -= ENEMY_SPEED
+                self.rect.y -= self.speed
                 self.facing = "up"
                 self.y_change = 1
 
