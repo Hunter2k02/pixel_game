@@ -3,7 +3,7 @@ from pygame.sprite import *
 from config import *
 import math
 import random
-from text import Text
+from text import *
 
 
 class Spritesheet:
@@ -35,7 +35,14 @@ class Player(pygame.sprite.Sprite):
 
         self.animation_loop = 0
 
-        self.basic_attack_damage = 1
+        self.basic_attack_level = 0
+        self.ultimate_attack_level = 0
+        self.speed_level = 0
+        self.health_and_mana_level = 0
+
+        self.basic_attack_damage = 1 + self.basic_attack_level * 3
+        self.ultimate_attack_damage = 5 + self.ultimate_attack_level * 5
+
         self.image = self.game.character_spritesheet.get_sprite(
             1, 646, self.width, self.height, WHITE
         )
@@ -152,18 +159,7 @@ class Player(pygame.sprite.Sprite):
             ),
         ]
 
-    def level_up(self, option):
-        if option == 1:
-            print("Basic attacks lvl up!")
-        elif option == 2:
-            print("Ultimate attacks lvl up!")
-        elif option == 3:
-            print("Mobility lvl up!")
-        else:
-            print("Endurance lvl up!")
-
     def update(self):
-
         self.movement()
         self.animate()
         self.rect.x += self.x_change
@@ -175,46 +171,47 @@ class Player(pygame.sprite.Sprite):
         self.y_change = 0
 
     def movement(self):
+        self.player_speed = PLAYER_SPEED + self.speed_level // 4
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             for sprite in self.game.all_sprites:
-                sprite.rect.x += PLAYER_SPEED
+                sprite.rect.x += self.player_speed
 
             for sprite in self.game.attacks:
-                sprite.rect.x += PLAYER_SPEED
+                sprite.rect.x += self.player_speed
 
-            self.x_change -= PLAYER_SPEED
+            self.x_change -= self.player_speed
 
             self.facing = "left"
 
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             for sprite in self.game.all_sprites:
-                sprite.rect.x -= PLAYER_SPEED
+                sprite.rect.x -= self.player_speed
             for sprite in self.game.attacks:
-                sprite.rect.x -= PLAYER_SPEED
+                sprite.rect.x -= self.player_speed
 
-            self.x_change += PLAYER_SPEED
+            self.x_change += self.player_speed
             self.facing = "right"
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             for sprite in self.game.all_sprites:
-                sprite.rect.y += PLAYER_SPEED
+                sprite.rect.y += self.player_speed
 
             for sprite in self.game.attacks:
-                sprite.rect.y += PLAYER_SPEED
+                sprite.rect.y += self.player_speed
 
-            self.y_change -= PLAYER_SPEED
+            self.y_change -= self.player_speed
             self.facing = "up"
 
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             for sprite in self.game.all_sprites:
-                sprite.rect.y -= PLAYER_SPEED
+                sprite.rect.y -= self.player_speed
 
             for sprite in self.game.attacks:
-                sprite.rect.y -= PLAYER_SPEED
+                sprite.rect.y -= self.player_speed
 
-            self.y_change += PLAYER_SPEED
+            self.y_change += self.player_speed
             self.facing = "down"
 
     def collide(self, direction):
@@ -224,12 +221,12 @@ class Player(pygame.sprite.Sprite):
             if hits:
                 if self.x_change > 0:
                     for sprite in self.game.all_sprites:
-                        sprite.rect.x += PLAYER_SPEED
+                        sprite.rect.x += self.player_speed
                     self.rect.x = hits[0].rect.left - self.rect.width
 
                 if self.x_change < 0:
                     for sprite in self.game.all_sprites:
-                        sprite.rect.x -= PLAYER_SPEED
+                        sprite.rect.x -= self.player_speed
                     self.rect.x = hits[0].rect.right
 
         if direction == "y":
@@ -237,11 +234,11 @@ class Player(pygame.sprite.Sprite):
             if hits:
                 if self.y_change > 0:
                     for sprite in self.game.all_sprites:
-                        sprite.rect.y += PLAYER_SPEED
+                        sprite.rect.y += self.player_speed
                     self.rect.y = hits[0].rect.top - self.rect.height
                 if self.y_change < 0:
                     for sprite in self.game.all_sprites:
-                        sprite.rect.y -= PLAYER_SPEED
+                        sprite.rect.y -= self.player_speed
                     self.rect.y = hits[0].rect.bottom
 
     def animate(self):
@@ -314,9 +311,6 @@ class Boundary_blocks(Block):
         self.image = pygame.transform.scale(self.image, (64, 64))
 
 
-# Grounds
-
-
 class Ground(pygame.sprite.Sprite):
     def __init__(self, game, x, y, Spritesheet):
         self.game = game
@@ -352,8 +346,8 @@ class Attack(pygame.sprite.Sprite):
         mouse_position = pygame.mouse.get_pos()
 
         angle = math.atan2(mouse_position[1] - self.y, mouse_position[0] - self.x)
-        self.dx = math.cos(angle) * PLAYER_SPEED
-        self.dy = math.sin(angle) * PLAYER_SPEED
+        self.dx = math.cos(angle) * self.game.player.player_speed
+        self.dy = math.sin(angle) * self.game.player.player_speed
 
         self.image = self.game.attack_spritesheet.get_sprite(
             0, 0, self.width, self.height, BLACK
@@ -384,7 +378,8 @@ class Attack(pygame.sprite.Sprite):
             self.game.attack_spritesheet.get_sprite(
                 390, 30, self.width, self.height * 0.75, BLACK
             ),
-        ] * 2
+        ] * (self.game.player.speed_level + 1)
+        self.upgrade_attack_tier(self.game.player.basic_attack_level // 3)
 
     def update(self):
         self.collide()
@@ -397,16 +392,118 @@ class Attack(pygame.sprite.Sprite):
             for sprite in hits:
                 sprite.health -= self.damage
                 self.kill()
+                Temporary_text_damage(
+                    self.game,
+                    self.damage,
+                    "red",
+                    sprite.rect.x,
+                    sprite.rect.y + 32,
+                    pygame.font.Font(
+                        "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                    ),
+                )
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
         self.animation_loop += 0.1
-        if self.animation_loop >= 14:
+        if self.animation_loop >= len(self.animations):
             self.kill()
 
     def movement(self):
         self.rect.x = self.rect.x + int(self.dx)
         self.rect.y = self.rect.y + int(self.dy)
+
+    def upgrade_attack_tier(self, tier):
+        if tier == 1:
+            self.animations = [
+                self.game.attack_spritesheet.get_sprite(
+                    0, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    64, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    128, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    192, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    256, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    320, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    384, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    448, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    512, 84, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    576, 84, self.width, self.height * 0.75, BLACK
+                ),
+            ] * (self.game.player.speed_level + 1)
+        if tier == 2:
+            self.animations = [
+                self.game.attack_spritesheet.get_sprite(
+                    0, 148, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    64, 148, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    128, 148, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    192, 148, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    256, 148, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    320, 148, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    384, 148, self.width, self.height * 0.75, BLACK
+                ),
+            ] * (self.game.player.speed_level + 1)
+        if tier >= 3:
+            self.animations = [
+                self.game.attack_spritesheet.get_sprite(
+                    0, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    64, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    128, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    192, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    256, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    320, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    384, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    448, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    512, 212, self.width, self.height * 0.75, BLACK
+                ),
+                self.game.attack_spritesheet.get_sprite(
+                    576, 212, self.width, self.height * 0.75, BLACK
+                ),
+            ] * (self.game.player.speed_level + 1)
 
 
 class Ultimate_attack(Attack):
@@ -469,6 +566,25 @@ class Ultimate_attack(Attack):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+    def upgrade_attack_tier(self, tier):
+        pass
+
+    def collide(self):
+        hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
+        if hits:
+            for sprite in hits:
+                sprite.health -= self.damage
+                Temporary_text_damage(
+                    self.game,
+                    self.damage,
+                    "blue",
+                    sprite.rect.x,
+                    sprite.rect.y + 32,
+                    pygame.font.Font(
+                        "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                    ),
+                )
 
     def animate(self):
 
@@ -576,7 +692,7 @@ class Enemy(pygame.sprite.Sprite):
         self.damage = damage
         self.health = health
         self.experience = exp
-
+        self.shoot_cooldown_count = 0
         self.up_animations = [
             enemy_spritesheet.get_sprite(0, 0, self.width, self.height, WHITE),
             enemy_spritesheet.get_sprite(64, 0, self.width, self.height, WHITE),
@@ -626,29 +742,51 @@ class Enemy(pygame.sprite.Sprite):
         ]
         self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 175, 90, WHITE)
 
+    def draw(self, screen):
+        pass
+
     def update(self):
 
+        self.cooldown()
         self.movement()
         self.animate()
-        self.collide()
+        self.collide("x")
+        self.collide("y")
         self.check_health()
         self.attack_player()
 
-    def collide(self):
-        hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
+    def collide(self, direction):
+
+        if direction == "x":
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            if hits:
+                if self.facing == "right":
+                    self.rect.x = hits[0].rect.left - self.rect.width
+
+                if self.facing == "left":
+                    self.rect.x = hits[0].rect.right + self.rect.width
+
+        if direction == "y":
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            if hits:
+                if self.facing == "up":
+                    self.rect.y = hits[0].rect.down - self.rect.height
+
+                if self.facing == "down":
+                    self.rect.y = hits[0].rect.down + self.rect.height
 
     def attack_player(self):
 
-        r = random.randint(0, 100)
-        if r == 1 and self.dist < 500:
+        if self.shoot_cooldown_count == 0 and self.dist < 750:
+            self.shoot_cooldown_count += 1
             if self.facing == "up":
-                Enemy_attack(self.game, self.rect.x, self.rect.y - TILESIZE, self)
+                Enemy_attack(self.game, self.rect.x, self.rect.y - TILESIZE // 2, self)
             if self.facing == "down":
-                Enemy_attack(self.game, self.rect.x, self.rect.y + TILESIZE, self)
+                Enemy_attack(self.game, self.rect.x, self.rect.y + TILESIZE // 2, self)
             if self.facing == "left":
-                Enemy_attack(self.game, self.rect.x - TILESIZE, self.rect.y, self)
+                Enemy_attack(self.game, self.rect.x - TILESIZE // 2, self.rect.y, self)
             if self.facing == "right":
-                Enemy_attack(self.game, self.rect.x + TILESIZE, self.rect.y, self)
+                Enemy_attack(self.game, self.rect.x + TILESIZE // 2, self.rect.y, self)
 
     def movement(self):
         self.x_change = 0
@@ -658,7 +796,7 @@ class Enemy(pygame.sprite.Sprite):
             self.game.player.rect.y - self.rect.y,
         )
         self.dist = math.hypot(dx, dy)
-        if self.dist < 500:
+        if self.dist < 750:
             if self.game.player.rect.x > self.rect.x:
 
                 self.rect.x += ENEMY_SPEED
@@ -685,7 +823,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def animate(self):
 
-        if self.dist < 500:
+        if self.dist < 750:
             if self.facing == "down":
 
                 self.image = self.down_animations[math.floor(self.animation_loop)]
@@ -726,16 +864,22 @@ class Enemy(pygame.sprite.Sprite):
 
     def check_health(self):
         if self.health <= 0:
-            self.game.experience_bar.get(self.experience)
             self.kill()
-            text = Text(
-                f"{self.experience} exp",
+            self.game.experience_bar.get(self.experience)
+            Temporary_text_experience(
+                self.game,
+                f"+{self.experience} xp",
                 "yellow",
-                self.rect.x,
-                self.rect.y + 32,
+                self.game.experience_bar.x + 325,
+                self.game.experience_bar.y + 12,
                 pygame.font.Font("font/pixel_font.ttf", 12),
             )
-            text.draw(self.game.screen)
+
+    def cooldown(self):
+        if self.shoot_cooldown_count >= 150:
+            self.shoot_cooldown_count = 0
+        elif self.shoot_cooldown_count > 0:
+            self.shoot_cooldown_count += 1
 
 
 class Bar(pygame.sprite.Sprite):
@@ -802,35 +946,59 @@ class Exp_bar(Bar):
         self.remaining = 0
 
     def lose(self):
-        self.game.player.level_up(random.randint(0, 4))
-        self.remaining = 0
         self.full = int(self.full * 1.5)
 
     def get(self, amount):
         if self.remaining < self.full:
             self.remaining += amount
         if self.remaining >= self.full:
+            self.game.paused_game = True
             self.remaining = self.remaining - self.full
             self.lose()
 
 
-class Info:
-    def __init__(self, game) -> None:
+class Skill_up_bar(pygame.sprite.Sprite):
+    def __init__(self, game, x, y, w, h, current, full, bg, fg):
         self.game = game
-        self.flag = 0
+        self.groups = self.game.text
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.current = current
+        self.full = full
+        self.color_1 = fg
+        self.color_2 = bg
 
     def update(self):
         self.draw(self.game.screen)
 
     def draw(self, screen):
-        if self.flag:
-            pass
-
-    def show_Exp(self, x, y, amount):
-        self.x = x
-        self.y = y
-        self.amount = amount
-        self.flag = 0
+        pygame.draw.rect(screen, self.color_2, (self.x, self.y, self.w, self.h))
+        pygame.draw.rect(
+            screen,
+            self.color_1,
+            (self.x, self.y, self.w * self.current // self.full, self.h),
+        )
+        for i in range(4):
+            pygame.draw.rect(
+                screen, (0, 0, 0), (self.x - i, self.y - i, self.w, self.h), 1
+            )
+        for j in range(self.full):
+            for i in range(4):
+                pygame.draw.rect(
+                    screen,
+                    (0, 0, 0),
+                    (
+                        self.x + (self.w // self.full) * j,
+                        self.y - i,
+                        self.w // self.full,
+                        self.h,
+                    ),
+                    1,
+                )
 
 
 class Cursor:
