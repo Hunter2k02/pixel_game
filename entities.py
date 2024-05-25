@@ -350,7 +350,10 @@ class Attack(pygame.sprite.Sprite):
         self.height = TILESIZE
         self.direction = self.game.player.facing
         self.animation_loop = 0
-        self.damage = self.game.player.basic_attack_damage
+        self.damage = (
+            self.game.player.basic_attack_damage
+            + 3 * self.game.player.basic_attack_level
+        )
         mouse_position = pygame.mouse.get_pos()
 
         angle = math.atan2(mouse_position[1] - self.y, mouse_position[0] - self.x)
@@ -388,6 +391,7 @@ class Attack(pygame.sprite.Sprite):
             ),
         ] * (self.game.player.speed_level + 1)
         self.upgrade_attack_tier(self.game.player.basic_attack_level // 3)
+        self.count = 0
 
     def update(self):
         self.collide()
@@ -716,10 +720,16 @@ class Ultimate_attack(Attack):
             self.width *= 4
 
     def collide(self):
+        self.max_count = 3 + 3 * self.game.player.ultimate_attack_level
+
         hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
         if hits:
             for sprite in hits:
                 sprite.health -= self.damage
+                self.count += 1
+                print(self.count)
+                if self.count >= self.max_count:
+                    self.kill()
                 Temporary_text_damage(
                     self.game,
                     self.damage,
@@ -732,7 +742,6 @@ class Ultimate_attack(Attack):
                 )
 
     def animate(self):
-
         self.image = self.animations[math.floor(self.animation_loop)]
         self.animation_loop += 0.1
         if self.animation_loop >= 16:
@@ -790,7 +799,6 @@ class Enemy_attack(pygame.sprite.Sprite):
             self.animations = [
                 pygame.transform.rotate(self.image, 15 * i) for i in range(1, 25)
             ]
-            print(self.animations)
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
