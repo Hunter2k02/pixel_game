@@ -157,8 +157,8 @@ class Game:
                             1,
                             5,
                             1,
-                            1,
-                        ).draw(self.screen)
+                            1.2,
+                        )
                     elif column == "a":
                         Enemy(
                             self,
@@ -170,8 +170,21 @@ class Game:
                             3,
                             10,
                             3,
-                            1,
-                        ).draw(self.screen)
+                            1.35,
+                        )
+                    elif column == "s":
+                        Enemy(
+                            self,
+                            i,
+                            j,
+                            "images/enemies/level_1/white_mouse_spearman.png",
+                            "images/enemies/level_1/white_mouse_spearman_attack.png",
+                            "White Mouse",
+                            10,
+                            25,
+                            10,
+                            1.5,
+                        )
 
                     elif column == "W":
                         Block(
