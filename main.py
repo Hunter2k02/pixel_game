@@ -9,35 +9,43 @@ import random
 
 os.environ["SDL_VIDEO_WINDOW_POS"] = "%d, %d" % (0, 30)
 
+game_ended = 0
+flags = pygame.FULLSCREEN | pygame.DOUBLEBUF
+
 
 class Game:
     def __init__(self):
         pygame.init()
+
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font("font/pixel_font.ttf", 50)
-        self.sky_surface = pygame.image.load("images/backgrounds/clouds.jpg")
-        self.ground_surface = pygame.image.load("images/backgrounds/ground.png")
-        self.window_open = True
-        self.active_game = False
-        self.paused_game = False
+
+        self.window_open = 1
+        self.active_game = 0
+        self.paused_game = 0
+
         self.buttons = [
             Text("START", AZURE, 400, 100, self.font),
             Text("EXIT", DARK_GREY, 400, 200, self.font),
         ]
-
+        pygame.mouse.set_visible(False)
         self.intro_screen()
-        self.cursor_spritesheet = Spritesheet("images/cursor/cursor.jpg")
+        self.FPS = Show_FPS(
+            self,
+            pygame.time.Clock.get_fps(self.clock),
+            WHITE,
+            WIDTH - WIDTH * 0.05,
+            HEIGHT * 0.05,
+            pygame.font.Font("font/pixel_font.ttf", 30),
+        )
         self.shoot_cooldown_count = 0
         self.max_cooldown = 50
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
         self.character_spritesheet = Spritesheet("images/player/player.png")
         self.terrain_spritesheet = Spritesheet("images/terrain/terrain.png")
         self.attack_spritesheet = Spritesheet("images/missles/spikes.png")
         self.ultimate_attack_spritesheet = Spritesheet("images/missles/tornado.png")
         self.mana_cost = 10
-
-        pygame.mouse.set_visible(False)
-        self.cursor = Cursor(self)
 
     def create_tilemap(self):
         """
@@ -55,7 +63,7 @@ class Game:
         for i, row in enumerate(tilemap):
             for j, column in enumerate(row):
                 random_terrain = random.randint(0, 2)
-                if i < 49:
+                if i < 49 and j < 101:
 
                     if random_terrain == 1:
                         Ground(
@@ -126,7 +134,7 @@ class Game:
                             i,
                             (
                                 self.terrain_spritesheet.get_sprite(
-                                    96, 192, 32, 64, BLACK
+                                    96, 202, 32, 54, BLACK
                                 ),
                                 (32, 64),
                             ),
@@ -139,9 +147,9 @@ class Game:
                             i,
                             (
                                 self.terrain_spritesheet.get_sprite(
-                                    994, 640, 32, 64, BLACK
+                                    994, 643, 25, 64, BLACK
                                 ),
-                                (128, 64),
+                                (64, 64),
                             ),
                         )
                     elif column == "P":
@@ -154,10 +162,10 @@ class Game:
                             "images/enemies/level_1/grey_mouse_child.png",
                             "images/enemies/level_1/grey_mouse_child_attack.png",
                             "Grey Mouse",
-                            1,
-                            5,
-                            1,
-                            1.2,
+                            2,
+                            10,
+                            2,
+                            1.35,
                         )
                     elif column == "a":
                         Enemy(
@@ -167,23 +175,23 @@ class Game:
                             "images/enemies/level_1/brown_mouse_assassin.png",
                             "images/enemies/level_1/brown_mouse_assassin_attack.png",
                             "Brown Mouse",
-                            3,
-                            10,
-                            3,
-                            1.35,
+                            5,
+                            20,
+                            5,
+                            2,
                         )
                     elif column == "s":
                         Enemy(
                             self,
-                            i,
                             j,
+                            i,
                             "images/enemies/level_1/white_mouse_spearman.png",
                             "images/enemies/level_1/white_mouse_spearman_attack.png",
                             "White Mouse",
                             10,
-                            25,
+                            30,
                             10,
-                            1.5,
+                            2.25,
                         )
 
                     elif column == "W":
@@ -221,10 +229,11 @@ class Game:
                                 (64, 64),
                             ),
                         )
+        self.spawner = Spawner(self, 30)
 
     def new(self):
 
-        self.active_game = True
+        self.active_game = 1
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
@@ -232,7 +241,34 @@ class Game:
         self.text = pygame.sprite.LayeredUpdates()
         self.create_tilemap()
 
+    def events_game_over(self):
+        pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN])
+        global game_ended
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            if self.options[0].rect.collidepoint(pygame.mouse.get_pos()):
+                self.options[0].color = "red"
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    game_ended = 0
+                    self.window_open = 0
+                    break
+
+            else:
+                self.options[0].color = DARK_GREY
+
+            if self.options[1].rect.collidepoint(pygame.mouse.get_pos()):
+                self.options[1].color = "red"
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    game_ended = 1
+                    self.window_open = 0
+
+            else:
+                self.options[1].color = DARK_GREY
+
     def events_pause(self):
+        pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN])
         for event in pygame.event.get():
             # Basic attack
             if (
@@ -243,7 +279,8 @@ class Game:
                 self.options[4].color = AZURE
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.basic_attack_level += 1
-                    self.paused_game = False
+                    self.player.level += 1
+                    self.paused_game = 0
             elif self.options[4].text == "+":
                 self.options[4].color = DARK_GREY
             # Ultimate attack
@@ -256,8 +293,9 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.ultimate_attack_level += 1
+                    self.player.level += 1
                     self.mana_cost = 10 + self.player.ultimate_attack_level
-                    self.paused_game = False
+                    self.paused_game = 0
             elif self.options[5].text == "+":
                 self.options[5].color = DARK_GREY
             # Speed
@@ -270,9 +308,13 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.speed_level += 1
+                    self.player.level += 1
+                    self.player.player_speed = (
+                        PLAYER_SPEED + self.player.speed_level // 4
+                    )
 
                     self.max_cooldown -= 2
-                    self.paused_game = False
+                    self.paused_game = 0
             elif self.options[6].text == "+":
                 self.options[6].color = DARK_GREY
             # Hp/Mana
@@ -285,33 +327,38 @@ class Game:
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.health_and_mana_level += 1
+                    self.player.level += 1
                     self.mana_bar.full += 20 * self.player.health_and_mana_level
-                    self.mana_bar.regen *= 2
+                    self.mana_bar.regen *= 1.25
                     self.mana_bar.remaining = self.mana_bar.full
                     self.health_bar.full += 20 * self.player.health_and_mana_level
-                    self.health_bar.regen *= 2
+                    self.health_bar.regen *= 1.25
                     self.health_bar.remaining = self.health_bar.full
-                    self.paused_game = False
+                    self.paused_game = 0
             elif self.options[7].text == "+":
                 self.options[7].color = DARK_GREY
 
             if event.type == pygame.QUIT:
                 pygame.quit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.paused_game = 0
 
     def events_main_menu(self):
+        pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                self.active_game = False
-                self.window_open = False
+                self.active_game = 0
+                self.window_open = 0
 
             if self.buttons[0].rect.collidepoint(pygame.mouse.get_pos()):
                 self.buttons[0].color = AZURE
                 self.buttons[1].color = DARK_GREY
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self.active_game = True
+                    self.active_game = 1
 
             else:
                 self.buttons[0].color = DARK_GREY
@@ -329,10 +376,15 @@ class Game:
                 self.buttons[1].color = DARK_GREY
 
     def events_in_game(self):
+        pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN])
         for event in pygame.event.get():
+            keys = pygame.key.get_pressed()
             if event.type == pygame.QUIT:
-                self.active_game = False
-                self.window_open = False
+                pygame.quit()
+                sys.exit()
+            if keys[pygame.K_ESCAPE]:
+                pygame.quit()
+                sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN and self.shoot_cooldown_count == 0:
 
@@ -356,7 +408,10 @@ class Game:
                         )
             if event.type == pygame.MOUSEBUTTONDOWN and self.shoot_cooldown_count == 0:
                 if event.button == 2:
-                    self.experience_bar.get(100000)
+                    self.player.basic_attack_level = 12
+                    self.player.ultimate_attack_level = 12
+                    self.player.speed_level = 10
+                    self.player.health_and_mana_level = 14
 
             if (
                 event.type == pygame.MOUSEBUTTONDOWN
@@ -393,7 +448,6 @@ class Game:
             self.health_bar.get()
 
     def update(self):
-
         self.cooldown()
         self.all_sprites.update()
         self.attacks.update()
@@ -401,6 +455,8 @@ class Game:
         self.mana_bar.update()
         self.experience_bar.update()
         self.text.update()
+        self.FPS.update()
+        self.spawner.update()
         self.cursor.update()
 
     def draw(self):
@@ -411,6 +467,7 @@ class Game:
         self.mana_bar.draw(self.screen)
         self.experience_bar.draw(self.screen)
         self.text.draw(self.screen)
+        self.FPS.draw(self.screen)
         self.cursor.draw(self.screen)
 
         self.clock.tick(FPS)
@@ -418,18 +475,58 @@ class Game:
 
     def main(self):
         while self.active_game:
+
             if self.paused_game:
                 self.pause_screen()
             self.events_in_game()
             self.update()
             self.draw()
-        self.window_open = False
+
+        self.game_over()
 
     def game_over(self):
-        print("Game Over")
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        self.options = [
+            Text(
+                "Retry",
+                DARK_GREY,
+                WIDTH // 2,
+                HEIGHT * 0.65,
+                pygame.font.Font("font/pixel_font.ttf", 100),
+            ),
+            Text(
+                "EXIT",
+                DARK_GREY,
+                WIDTH // 2,
+                HEIGHT * 0.85,
+                pygame.font.Font("font/pixel_font.ttf", 100),
+            ),
+            Text(
+                "GAME OVER",
+                RED,
+                WIDTH // 2,
+                HEIGHT * 0.3,
+                pygame.font.Font("font/pixel_font.ttf", 170),
+            ),
+        ]
+        while self.window_open:
+            self.screen.fill(BLACK)
+            for sprite in self.options:
+                sprite.draw(self.screen)
+            self.cursor.draw(self.screen)
+            self.cursor.update()
+            pygame.display.update()
+            self.clock.tick(FPS)
+            self.events_game_over()
 
     def intro_screen(self):
-        self.screen = pygame.display.set_mode((800, 400))
+        self.screen = pygame.display.set_mode((800, 400), depth=8)
+        self.sky_surface = pygame.image.load("images/backgrounds/clouds.jpg").convert()
+        self.ground_surface = pygame.image.load(
+            "images/backgrounds/ground.png"
+        ).convert()
+        self.cursor_spritesheet = Spritesheet("images/cursor/cursor.jpg")
+        self.cursor = Cursor(self)
         sky_x_position = 600
 
         while not self.active_game:
@@ -442,12 +539,14 @@ class Game:
             sky_x_position -= 0.5
             if sky_x_position <= -1200:
                 sky_x_position = 700
+            self.cursor.draw(self.screen)
+            self.cursor.update()
             self.events_main_menu()
             pygame.display.update()
             self.clock.tick(FPS)
 
     def pause_screen(self):
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
         self.options = [
             Skill_up_bar(
                 self,
@@ -579,16 +678,14 @@ class Game:
 
         for sprite in self.options:
             sprite.kill()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
 
 
 if __name__ == "__main__":
 
-    game = Game()
-    game.new()
-    while game.window_open:
-        game.main()
-        game.game_over()
-
-    pygame.quit()
-    sys.exit()
+    while not game_ended:
+        game = Game()
+        game.new()
+        while game.window_open:
+            game.main()
+            game.game_over()

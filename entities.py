@@ -50,7 +50,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
-
+        self.player_speed = PLAYER_SPEED + self.speed_level // 4
         # Animations
         self.up_animations = [
             self.game.character_spritesheet.get_sprite(
@@ -161,19 +161,20 @@ class Player(pygame.sprite.Sprite):
         ]
 
     def update(self):
-        self.movement()
-        self.animate()
-        self.rect.x += self.x_change
-        self.collide("x")
-        self.rect.y += self.y_change
-        self.collide("y")
-
-        self.x_change = 0
-        self.y_change = 0
-
-    def movement(self):
-        self.player_speed = PLAYER_SPEED + self.speed_level // 4
         keys = pygame.key.get_pressed()
+        if keys:
+            self.movement(keys)
+            self.animate()
+            self.animate()
+            self.rect.x += self.x_change
+            self.collide("x")
+            self.rect.y += self.y_change
+            self.collide("y")
+
+            self.x_change = 0
+            self.y_change = 0
+
+    def movement(self, keys):
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             for sprite in self.game.all_sprites:
@@ -183,7 +184,6 @@ class Player(pygame.sprite.Sprite):
                 sprite.rect.x += self.player_speed
 
             self.x_change -= self.player_speed
-
             self.facing = "left"
 
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
@@ -216,7 +216,7 @@ class Player(pygame.sprite.Sprite):
             self.facing = "down"
 
     def collide(self, direction):
-
+        # https://stackoverflow.com/questions/20180594/pygame-collision-by-sides-of-sprite
         if direction == "x":
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
             if hits:
@@ -316,8 +316,7 @@ class Block(pygame.sprite.Sprite):
 class Boundary_blocks(Block):
     def __init__(self, game, x, y, Spritesheet):
         Block.__init__(self, game, x, y, Spritesheet)
-        self.width = TILESIZE // 2
-        self.image = pygame.transform.scale(self.image, (64, 64))
+        self.image = pygame.transform.scale(self.image, (TILESIZE, TILESIZE))
 
 
 class Ground(pygame.sprite.Sprite):
@@ -729,7 +728,6 @@ class Ultimate_attack(Attack):
             for sprite in hits:
                 sprite.health -= self.damage
                 self.count += 1
-                print(self.count)
                 if self.count >= self.max_count:
                     self.kill()
                 Temporary_text_damage(
@@ -792,15 +790,13 @@ class Enemy_attack(pygame.sprite.Sprite):
                 0, 0, self.width, self.height // 2, WHITE
             )
             self.image = pygame.transform.scale(self.image, (16, 8))
-            self.animations = [
-                pygame.transform.rotate(self.image, 15 * i) for i in range(1, 25)
-            ]
+            self.animations = [self.image] * 35
 
         if name == "Brown Mouse":
             self.image = self.spritesheet.get_sprite(0, 0, 16, 8, WHITE)
             self.image = pygame.transform.scale(self.image, (32, 16))
             self.animations = [
-                pygame.transform.rotate(self.image, 15 * i) for i in range(1, 25)
+                pygame.transform.rotate(self.image, i * 15) for i in range(24)
             ]
         if name == "White Mouse":
             self.image = self.spritesheet.get_sprite(0, 0, 55, 5, WHITE)
@@ -849,6 +845,8 @@ class Enemy(pygame.sprite.Sprite):
         exp,
         speed,
     ):
+        self.enemy_spritesheet_path = enemy_spritesheet_path
+        self.enemy_attack_spritesheet_path = enemy_attack_spritesheet_path
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites, self.game.enemies
@@ -860,20 +858,20 @@ class Enemy(pygame.sprite.Sprite):
         self.animation_loop = 0
         enemy_spritesheet = Spritesheet(enemy_spritesheet_path)
         self.enemy_attack_spritesheet = Spritesheet(enemy_attack_spritesheet_path)
-
+        self.dist = 1000
         self.image = enemy_spritesheet.get_sprite(
             1, 128, self.width, self.height, WHITE
         )
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+        self.respawn_time = 15
 
         self.speed = speed
         self.name = name
         self.damage = damage
         self.health = health
         self.experience = exp
-        self.max_cooldown_count = 150
         self.shoot_cooldown_count = 0
         self.up_animations = [
             enemy_spritesheet.get_sprite(0, 0, self.width, self.height, WHITE),
@@ -923,62 +921,70 @@ class Enemy(pygame.sprite.Sprite):
             enemy_spritesheet.get_sprite(512, 64, self.width, self.height, WHITE),
         ]
         self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 64, 32, BLACK)
+        self.personalize(self.name)
 
     def personalize(self, name):
-        pass
+        if name == "Grey Mouse":
+            self.max_cooldown_count = 175
+            self.respawn_time = 3
+        elif name == "Brown Mouse":
+            self.max_cooldown_count = 100
+            self.respawn_time = 25
+        elif name == "White Mouse":
+            self.max_cooldown_count = 80
+            self.respawn_time = 30
 
     def update(self):
 
         self.cooldown()
-        self.movement()
-        self.animate()
         self.collide("x")
+        self.movement()
         self.collide("y")
+        self.animate()
+
         self.check_health()
-        self.attack_player()
+        if self.shoot_cooldown_count == 0:
+            self.attack_player()
 
     def collide(self, direction):
+        if self.dist < 600:
+            if direction == "x":
+                hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+                if hits:
+                    if self.facing == "right":
+                        self.rect.x = hits[0].rect.left - self.rect.width
+                    if self.facing == "left":
+                        self.rect.x = hits[0].rect.right
 
-        if direction == "x":
-            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            if hits:
-                if self.facing == "right":
-                    self.rect.x = hits[0].rect.left - self.rect.width
-
-                if self.facing == "left":
-                    self.rect.x = hits[0].rect.right + self.rect.width
-
-        if direction == "y":
-            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            if hits:
-                if self.facing == "up":
-                    self.rect.y = hits[0].rect.top + self.rect.height
-
-                if self.facing == "down":
-                    self.rect.y = hits[0].rect.bottom - self.rect.height * 2
+            if direction == "y":
+                hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+                if hits:
+                    if self.facing == "up":
+                        self.rect.y = hits[0].rect.bottom
+                    if self.facing == "down":
+                        self.rect.y = hits[0].rect.top - self.rect.height
 
     def attack_player(self):
-
-        if self.shoot_cooldown_count == 0 and self.dist < 750:
+        if self.dist < 600:
             self.shoot_cooldown_count += 1
             if self.facing == "up":
-                Enemy_attack(self.game, self.rect.x, self.rect.y - TILESIZE // 2, self)
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
             if self.facing == "down":
-                Enemy_attack(self.game, self.rect.x, self.rect.y + TILESIZE // 2, self)
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
             if self.facing == "left":
-                Enemy_attack(self.game, self.rect.x - TILESIZE // 2, self.rect.y, self)
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
             if self.facing == "right":
-                Enemy_attack(self.game, self.rect.x + TILESIZE // 2, self.rect.y, self)
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
 
     def movement(self):
-        self.x_change = 0
-        self.y_change = 0
-        dx, dy = (
+        self.dist = math.hypot(
             self.game.player.rect.x - self.rect.x,
             self.game.player.rect.y - self.rect.y,
         )
-        self.dist = math.hypot(dx, dy)
-        if self.dist < 750:
+
+        self.x_change = 0
+        self.y_change = 0
+        if self.dist < 600:
             if self.game.player.rect.x > self.rect.x:
 
                 self.rect.x += self.speed
@@ -1004,8 +1010,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.y_change = 1
 
     def animate(self):
-
-        if self.dist < 750:
+        if self.dist < 600:
             if self.facing == "down":
 
                 self.image = self.down_animations[math.floor(self.animation_loop)]
@@ -1033,7 +1038,6 @@ class Enemy(pygame.sprite.Sprite):
                 self.animation_loop += 0.15
                 if self.animation_loop >= 9:
                     self.animation_loop = 1
-
         else:
             if self.facing == "up":
                 self.image = self.up_animations[0]
@@ -1056,6 +1060,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.game.experience_bar.y + 12,
                 pygame.font.Font("font/pixel_font.ttf", 12),
             )
+            
+            self.game.spawner.add(self.name)
 
     def cooldown(self):
         if self.shoot_cooldown_count >= self.max_cooldown_count:
@@ -1090,9 +1096,9 @@ class Boss(Enemy):
             exp,
             speed,
         )
-    
+
     def personalize(self):
-        
+        pass
 
 
 class Bar(pygame.sprite.Sprite):
@@ -1150,7 +1156,7 @@ class Health_bar(Bar):
         if self.remaining <= 0:
             self.remaining = 0
             self.game.player.kill()
-            self.game.active_game = False
+            self.game.active_game = 0
 
 
 class Exp_bar(Bar):
@@ -1159,13 +1165,13 @@ class Exp_bar(Bar):
         self.remaining = 0
 
     def lose(self):
-        self.full = int(self.full * 1.5)
+        self.full = self.full + int((self.game.player.level // 0.7) ** 2)
 
     def get(self, amount):
         if self.remaining < self.full:
             self.remaining += amount
         if self.remaining >= self.full:
-            self.game.paused_game = True
+            self.game.paused_game = 1
             self.remaining = self.remaining - self.full
             self.lose()
 
@@ -1231,3 +1237,50 @@ class Cursor:
     def update(self):
         self.x = pygame.mouse.get_pos()[0]
         self.y = pygame.mouse.get_pos()[1]
+
+
+class Spawner():
+    def __init__(self, game, respawn_time):
+        self.game = game 
+        self.respawn_time = respawn_time * 10
+        self.list_of_enemies = {   
+                "Grey Mouse":0,
+                "Brown Mouse":0,
+                "White Mouse":0
+            }
+        self.current = self.respawn_time
+    def add(self, name): 
+        if name == "Grey Mouse":
+            self.list_of_enemies["Grey Mouse"] += 1
+        elif name == "Brown Mouse":
+            self.list_of_enemies["Brown Mouse"] += 1
+        elif name == "White Mouse":
+            self.list_of_enemies["White Mouse"] += 1
+    
+    def update(self):
+        
+        if self.current  == 0:
+            for enemy in self.list_of_enemies:
+                if enemy == "Grey Mouse":
+                    for _ in range(self.list_of_enemies[enemy]):
+                        x = random.randint(1, 45)
+                        y = random.randint(1, 15)
+                        Enemy(self.game, x, y, "images/enemies/level_1/grey_mouse_child.png","images/enemies/level_1/grey_mouse_child_attack.png", enemy, 2, 10, 2, 1.35)
+                elif enemy == "Brown Mouse":
+                    for _ in range(self.list_of_enemies[enemy]):
+                        x = random.randint(1, 97)
+                        y = random.randint(1, 15)
+                        Enemy(self.game, x, y, "images/enemies/level_1/brown_mouse_assasin.png","images/enemies/level_1/brown_mouse_assasin_attack.png", enemy, 5, 20, 5, 2)
+                elif enemy == "White Mouse":
+                    for _ in range(self.list_of_enemies[enemy]):
+                        x = random.randint(4, 97)
+                        y = random.randint(1, 15)
+                        Enemy(self.game, x, y, "images/enemies/level_1/white_mouse_spearman.png","images/enemies/level_1/white_mouse_spearman_attack.png", enemy, 10, 30, 10, 2.25)
+            self.current = self.respawn_time
+            self.list_of_enemies = {   
+                "Grey Mouse":0,
+                "Brown Mouse":0,
+                "White Mouse":0
+            }
+        else:
+            self.current -= 1

@@ -35,7 +35,7 @@ class Temporary_text_experience(pygame.sprite.Sprite):
             [
                 x
                 for x in self.game.text
-                if x.__class__.__name__ == "temporary_text_Experience"
+                if x.__class__.__name__ == "Temporary_text_experience"
             ]
         )
         self.y = y + 25 * (lenght - 1)
@@ -110,3 +110,19 @@ class Level_up_text(pygame.sprite.Sprite):
 
     def delete(self):
         self.flag = 0
+
+
+class Show_FPS(Text):
+    def __init__(self, game, text, color, x, y, font):
+        super().__init__(text, color, x, y, font)
+        self.game = game
+
+    def update(self):
+        self.text = str(f"{pygame.time.Clock.get_fps(self.game.clock):.2f}")
+        self.image = self.font.render(self.text, 1, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = self.x, self.y
+
+    def draw(self, surface):
+        self.update()
+        surface.blit(self.image, self.rect)
