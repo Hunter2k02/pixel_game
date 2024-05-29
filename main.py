@@ -192,6 +192,20 @@ class Game:
                             10,
                             2.25,
                         )
+                    elif column == "b":
+                        Boss(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_1/mouse_boss.png",
+                            "images/enemies/level_1/mouse_boss_attack.png",
+                            "images/enemies/level_1/mouse_boss_boss_attack.png",
+                            "Mouse Boss",
+                            1,
+                            1,
+                            1,
+                            1,
+                        )
 
                     elif column == "W":
                         Block(

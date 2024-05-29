@@ -42,8 +42,10 @@ class Player(pygame.sprite.Sprite):
         self.speed_level = 0
         self.health_and_mana_level = 0
 
-        self.basic_attack_damage = 2 + self.level + self.basic_attack_level * 2
-        self.ultimate_attack_damage = 5 + self.level + self.ultimate_attack_level * 5
+        self.basic_attack_damage = 2 + self.level + self.basic_attack_level * 3
+        self.ultimate_attack_damage = (
+            5 + self.level * 3 + self.ultimate_attack_level * 5
+        )
 
         self.image = self.game.character_spritesheet.get_sprite(
             1, 646, self.width, self.height, WHITE
@@ -843,6 +845,15 @@ class Enemy_attack(pygame.sprite.Sprite):
                 self.image, 180 - math.degrees(self.angle)
             )
             self.animations = [self.image] * 35
+        if name == "Mouse Boss":
+            self.image = self.spritesheet.get_sprite(0, 0, 44, 30, WHITE)
+            self.image = pygame.transform.scale(self.image, (32, 32))
+            self.image = pygame.transform.rotate(
+                self.image, 290 - math.degrees(self.angle)
+            )
+            self.animations = [
+                pygame.transform.rotate(self.image, i * 10) for i in range(36)
+            ]
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
@@ -859,7 +870,7 @@ class Enemy_attack(pygame.sprite.Sprite):
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
-        self.animation_loop += 0.15
+        self.animation_loop += 0.15 + (self.enemy.speed * 0.05)
         if self.animation_loop >= len(self.animations):
             self.kill()
 
@@ -964,13 +975,12 @@ class Enemy(pygame.sprite.Sprite):
     def personalize(self, name):
         if name == "Grey Mouse":
             self.max_cooldown_count = 175
-            self.respawn_time = 3
         elif name == "Brown Mouse":
             self.max_cooldown_count = 100
-            self.respawn_time = 25
         elif name == "White Mouse":
             self.max_cooldown_count = 80
-            self.respawn_time = 30
+        elif name == "Mouse Boss":
+            self.max_cooldown_count = 70
 
     def update(self):
 
@@ -1116,11 +1126,13 @@ class Boss(Enemy):
         y,
         enemy_spritesheet_path,
         enemy_attack_spritesheet_path,
+        boss_attack_spritesheet_path,
         name,
         damage,
         health,
         exp,
         speed,
+        respawn_id=None,
     ):
         super().__init__(
             game,
@@ -1134,9 +1146,48 @@ class Boss(Enemy):
             exp,
             speed,
         )
+        self.boss_attack_spritesheet = Spritesheet(boss_attack_spritesheet_path)
+        self.max_cooldown_count = 75
+        self.ultimate_cooldown_count = 0
+        self.ultimate_cooldown_max = 500
 
-    def personalize(self):
-        pass
+    def update(self):
+        super().update()
+        if self.ultimate_cooldown_count == 0:
+            self.ultimate_attack_player()
+
+    def ultimate_attack_player(self):
+        if self.dist < 600:
+            self.ultimate_cooldown_count += 1
+            Boss_attack(self.game, self.rect.x, self.rect.y, self)
+
+    def personalize(self, name):
+        if name == "Mouse Boss":
+            self.max_cooldown_count = 100
+
+    def cooldown(self):
+        super().cooldown()
+        if self.ultimate_cooldown_count >= self.ultimate_cooldown_max:
+            self.ultimate_cooldown_count = 0
+        elif self.ultimate_cooldown_count > 0:
+            self.ultimate_cooldown_count += 1
+
+
+class Boss_attack(Enemy_attack):
+    def __init__(self, game, x, y, enemy):
+        super().__init__(game, x, y, enemy)
+        self.damage = self.enemy.damage * 3
+
+    def personalize(self, name):
+        if name == "Mouse Boss":
+            self.image = self.enemy.boss_attack_spritesheet.get_sprite(
+                0, 0, 44, 30, WHITE
+            )
+            self.image = pygame.transform.scale(self.image, (128, 64))
+            self.image = pygame.transform.rotate(
+                self.image, 290 - math.degrees(self.angle)
+            )
+            self.animations = [self.image] * 35
 
 
 class Bar(pygame.sprite.Sprite):
@@ -1281,12 +1332,14 @@ class Spawner:
     def __init__(self, game):
 
         self.game = game
-        self.respawn_time = 10
+        self.respawn_time = ENEMIES_RESPAWN_TIME
+
         self.current = self.respawn_time
         self.hashmap_of_enemies = {
             "Grey Mouse": [],
             "Brown Mouse": [],
             "White Mouse": [],
+            "Mouse Boss": [],
         }
 
         self.list_of_dead_enemies = []
@@ -1325,6 +1378,17 @@ class Spawner:
                     "s",
                     len(self.hashmap_of_enemies["White Mouse"]),
                 )
+            if self.list_of_all_enemies[i].name == "Mouse Boss":
+                self.hashmap_of_enemies["Mouse Boss"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "b",
+                    len(self.hashmap_of_enemies["Mouse Boss"]),
+                )
 
     def add(self, respawn_id):
         self.list_of_dead_enemies.append(respawn_id)
@@ -1334,7 +1398,6 @@ class Spawner:
         if self.current == 0:
 
             if self.list_of_dead_enemies:
-                print(self.list_of_dead_enemies)
 
                 for i in range(len(self.list_of_dead_enemies)):
 
@@ -1429,6 +1492,35 @@ class Spawner:
                                     30,
                                     10,
                                     2.25,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            if self.list_of_dead_enemies[i][0] == "b":
+                                Boss(
+                                    self.game,
+                                    self.hashmap_of_enemies["Mouse Boss"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Mouse Boss"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_1/mouse_boss.png",
+                                    "images/enemies/level_1/mouse_boss_attack.png",
+                                    "images/enemies/level_1/mouse_boss_boss_attack.png",
+                                    "Mouse Boss",
+                                    25,
+                                    200,
+                                    100,
+                                    2.5,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
 
