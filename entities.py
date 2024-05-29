@@ -23,10 +23,11 @@ class Player(pygame.sprite.Sprite):
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
-        self.x = x * TILESIZE // 2
-        self.y = y * TILESIZE // 2
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
         self.width = TILESIZE
         self.height = TILESIZE
+        self.absolute_sprite_moved_value = (0, 0)
 
         self.x_change = 0
         self.y_change = 0
@@ -41,8 +42,8 @@ class Player(pygame.sprite.Sprite):
         self.speed_level = 0
         self.health_and_mana_level = 0
 
-        self.basic_attack_damage = 1 + self.basic_attack_level * 3
-        self.ultimate_attack_damage = 5 + self.ultimate_attack_level * 5
+        self.basic_attack_damage = 2 + self.level + self.basic_attack_level * 2
+        self.ultimate_attack_damage = 5 + self.level + self.ultimate_attack_level * 5
 
         self.image = self.game.character_spritesheet.get_sprite(
             1, 646, self.width, self.height, WHITE
@@ -179,6 +180,10 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             for sprite in self.game.all_sprites:
                 sprite.rect.x += self.player_speed
+                self.absolute_sprite_moved_value = (
+                    self.absolute_sprite_moved_value[0] + self.player_speed,
+                    self.absolute_sprite_moved_value[1],
+                )
 
             for sprite in self.game.attacks:
                 sprite.rect.x += self.player_speed
@@ -189,6 +194,11 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             for sprite in self.game.all_sprites:
                 sprite.rect.x -= self.player_speed
+                self.absolute_sprite_moved_value = (
+                    self.absolute_sprite_moved_value[0] - self.player_speed,
+                    self.absolute_sprite_moved_value[1],
+                )
+
             for sprite in self.game.attacks:
                 sprite.rect.x -= self.player_speed
 
@@ -196,8 +206,13 @@ class Player(pygame.sprite.Sprite):
             self.facing = "right"
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
+
             for sprite in self.game.all_sprites:
                 sprite.rect.y += self.player_speed
+                self.absolute_sprite_moved_value = (
+                    self.absolute_sprite_moved_value[0],
+                    self.absolute_sprite_moved_value[1] + self.player_speed,
+                )
 
             for sprite in self.game.attacks:
                 sprite.rect.y += self.player_speed
@@ -208,6 +223,10 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             for sprite in self.game.all_sprites:
                 sprite.rect.y -= self.player_speed
+                self.absolute_sprite_moved_value = (
+                    self.absolute_sprite_moved_value[0],
+                    self.absolute_sprite_moved_value[1] - self.player_speed,
+                )
 
             for sprite in self.game.attacks:
                 sprite.rect.y -= self.player_speed
@@ -223,13 +242,22 @@ class Player(pygame.sprite.Sprite):
                 if self.x_change > 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.x += self.player_speed
+                        self.absolute_sprite_moved_value = (
+                            self.absolute_sprite_moved_value[0] + self.player_speed,
+                            self.absolute_sprite_moved_value[1],
+                        )
                     for sprite in self.game.attacks:
                         sprite.rect.x += self.player_speed
                     self.rect.x = hits[0].rect.left - self.rect.width
 
                 if self.x_change < 0:
+
                     for sprite in self.game.all_sprites:
                         sprite.rect.x -= self.player_speed
+                        self.absolute_sprite_moved_value = (
+                            self.absolute_sprite_moved_value[0] - self.player_speed,
+                            self.absolute_sprite_moved_value[1],
+                        )
                     for sprite in self.game.attacks:
                         sprite.rect.x -= self.player_speed
                     self.rect.x = hits[0].rect.right
@@ -240,12 +268,21 @@ class Player(pygame.sprite.Sprite):
                 if self.y_change > 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.y += self.player_speed
+
+                        self.absolute_sprite_moved_value = (
+                            self.absolute_sprite_moved_value[0],
+                            self.absolute_sprite_moved_value[1] + self.player_speed,
+                        )
                     for sprite in self.game.attacks:
                         sprite.rect.y += self.player_speed
                     self.rect.y = hits[0].rect.top - self.rect.height
                 if self.y_change < 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.y -= self.player_speed
+                        self.absolute_sprite_moved_value = (
+                            self.absolute_sprite_moved_value[0],
+                            self.absolute_sprite_moved_value[1] - self.player_speed,
+                        )
                     for sprite in self.game.attacks:
                         sprite.rect.y -= self.player_speed
                     self.rect.y = hits[0].rect.bottom
@@ -325,7 +362,7 @@ class Ground(pygame.sprite.Sprite):
         self._layer = GROUND_LAYER
         self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
-
+        self.id = (x, y)
         self.x = x * TILESIZE
         self.y = y * TILESIZE
         self.width = TILESIZE
@@ -844,6 +881,7 @@ class Enemy(pygame.sprite.Sprite):
         health,
         exp,
         speed,
+        respawn_id=None,
     ):
         self.enemy_spritesheet_path = enemy_spritesheet_path
         self.enemy_attack_spritesheet_path = enemy_attack_spritesheet_path
@@ -865,7 +903,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
-        self.respawn_time = 15
+        self.respawn_id = respawn_id
 
         self.speed = speed
         self.name = name
@@ -1060,8 +1098,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.game.experience_bar.y + 12,
                 pygame.font.Font("font/pixel_font.ttf", 12),
             )
-            
-            self.game.spawner.add(self.name)
+
+            self.game.spawner.add(self.respawn_id)
 
     def cooldown(self):
         if self.shoot_cooldown_count >= self.max_cooldown_count:
@@ -1239,48 +1277,162 @@ class Cursor:
         self.y = pygame.mouse.get_pos()[1]
 
 
-class Spawner():
-    def __init__(self, game, respawn_time):
-        self.game = game 
-        self.respawn_time = respawn_time * 10
-        self.list_of_enemies = {   
-                "Grey Mouse":0,
-                "Brown Mouse":0,
-                "White Mouse":0
-            }
+class Spawner:
+    def __init__(self, game):
+
+        self.game = game
+        self.respawn_time = 10
         self.current = self.respawn_time
-    def add(self, name): 
-        if name == "Grey Mouse":
-            self.list_of_enemies["Grey Mouse"] += 1
-        elif name == "Brown Mouse":
-            self.list_of_enemies["Brown Mouse"] += 1
-        elif name == "White Mouse":
-            self.list_of_enemies["White Mouse"] += 1
-    
+        self.hashmap_of_enemies = {
+            "Grey Mouse": [],
+            "Brown Mouse": [],
+            "White Mouse": [],
+        }
+
+        self.list_of_dead_enemies = []
+        self.list_of_all_enemies = [enemy for enemy in self.game.enemies.sprites()]
+        for i in range(len(self.list_of_all_enemies)):
+            if self.list_of_all_enemies[i].name == "Grey Mouse":
+                self.hashmap_of_enemies["Grey Mouse"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "e",
+                    len(self.hashmap_of_enemies["Grey Mouse"]),
+                )
+            if self.list_of_all_enemies[i].name == "Brown Mouse":
+                self.hashmap_of_enemies["Brown Mouse"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "a",
+                    len(self.hashmap_of_enemies["Brown Mouse"]),
+                )
+            if self.list_of_all_enemies[i].name == "White Mouse":
+                self.hashmap_of_enemies["White Mouse"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "s",
+                    len(self.hashmap_of_enemies["White Mouse"]),
+                )
+
+    def add(self, respawn_id):
+        self.list_of_dead_enemies.append(respawn_id)
+
     def update(self):
-        
-        if self.current  == 0:
-            for enemy in self.list_of_enemies:
-                if enemy == "Grey Mouse":
-                    for _ in range(self.list_of_enemies[enemy]):
-                        x = random.randint(1, 45)
-                        y = random.randint(1, 15)
-                        Enemy(self.game, x, y, "images/enemies/level_1/grey_mouse_child.png","images/enemies/level_1/grey_mouse_child_attack.png", enemy, 2, 10, 2, 1.35)
-                elif enemy == "Brown Mouse":
-                    for _ in range(self.list_of_enemies[enemy]):
-                        x = random.randint(1, 97)
-                        y = random.randint(1, 15)
-                        Enemy(self.game, x, y, "images/enemies/level_1/brown_mouse_assasin.png","images/enemies/level_1/brown_mouse_assasin_attack.png", enemy, 5, 20, 5, 2)
-                elif enemy == "White Mouse":
-                    for _ in range(self.list_of_enemies[enemy]):
-                        x = random.randint(4, 97)
-                        y = random.randint(1, 15)
-                        Enemy(self.game, x, y, "images/enemies/level_1/white_mouse_spearman.png","images/enemies/level_1/white_mouse_spearman_attack.png", enemy, 10, 30, 10, 2.25)
-            self.current = self.respawn_time
-            self.list_of_enemies = {   
-                "Grey Mouse":0,
-                "Brown Mouse":0,
-                "White Mouse":0
-            }
+
+        if self.current == 0:
+
+            if self.list_of_dead_enemies:
+                print(self.list_of_dead_enemies)
+
+                for i in range(len(self.list_of_dead_enemies)):
+
+                    for j in range(len(self.list_of_all_enemies)):
+
+                        if (
+                            self.list_of_dead_enemies[i][0]
+                            == self.list_of_all_enemies[j].respawn_id[0]
+                            and self.list_of_dead_enemies[i][1]
+                            == self.list_of_all_enemies[j].respawn_id[1]
+                        ):
+                            if self.list_of_dead_enemies[i][0] == "e":
+
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["Grey Mouse"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Grey Mouse"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_1/grey_mouse_child.png",
+                                    "images/enemies/level_1/grey_mouse_child_attack.png",
+                                    "Grey Mouse",
+                                    2,
+                                    10,
+                                    2,
+                                    1.35,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            if self.list_of_dead_enemies[i][0] == "a":
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["Brown Mouse"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Brown Mouse"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_1/brown_mouse_assassin.png",
+                                    "images/enemies/level_1/brown_mouse_assassin_attack.png",
+                                    "Brown Mouse",
+                                    6,
+                                    20,
+                                    5,
+                                    2,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            if self.list_of_dead_enemies[i][0] == "s":
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["White Mouse"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["White Mouse"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_1/white_mouse_spearman.png",
+                                    "images/enemies/level_1/white_mouse_spearman_attack.png",
+                                    "White Mouse",
+                                    15,
+                                    30,
+                                    10,
+                                    2.25,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+
+                self.list_of_dead_enemies = []  # Reset the list
+                self.current = self.respawn_time  # Reset the timer
         else:
             self.current -= 1

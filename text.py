@@ -118,7 +118,7 @@ class Show_FPS(Text):
         self.game = game
 
     def update(self):
-        self.text = str(f"{pygame.time.Clock.get_fps(self.game.clock):.2f}")
+        self.text = str(f"fps: {pygame.time.Clock.get_fps(self.game.clock):.2f}")
         self.image = self.font.render(self.text, 1, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = self.x, self.y

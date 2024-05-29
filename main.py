@@ -63,7 +63,7 @@ class Game:
         for i, row in enumerate(tilemap):
             for j, column in enumerate(row):
                 random_terrain = random.randint(0, 2)
-                if i < 49 and j < 101:
+                if i < 49 and j < 99:
 
                     if random_terrain == 1:
                         Ground(
@@ -152,8 +152,7 @@ class Game:
                                 (64, 64),
                             ),
                         )
-                    elif column == "P":
-                        self.player = Player(self, j, i)
+
                     elif column == "e":
                         Enemy(
                             self,
@@ -175,7 +174,7 @@ class Game:
                             "images/enemies/level_1/brown_mouse_assassin.png",
                             "images/enemies/level_1/brown_mouse_assassin_attack.png",
                             "Brown Mouse",
-                            5,
+                            6,
                             20,
                             5,
                             2,
@@ -188,7 +187,7 @@ class Game:
                             "images/enemies/level_1/white_mouse_spearman.png",
                             "images/enemies/level_1/white_mouse_spearman_attack.png",
                             "White Mouse",
-                            10,
+                            15,
                             30,
                             10,
                             2.25,
@@ -229,7 +228,9 @@ class Game:
                                 (64, 64),
                             ),
                         )
-        self.spawner = Spawner(self, 30)
+                        # 8,15
+        self.player = Player(self, WIDTH // 128, HEIGHT // 128)
+        self.spawner = Spawner(self)
 
     def new(self):
 
@@ -391,6 +392,7 @@ class Game:
                 if event.button == 1:
                     self.shoot_cooldown_count += 1
                     if self.player.facing == "up":
+
                         Attack(
                             self, self.player.rect.x, self.player.rect.y - TILESIZE // 2
                         )
@@ -448,6 +450,7 @@ class Game:
             self.health_bar.get()
 
     def update(self):
+
         self.cooldown()
         self.all_sprites.update()
         self.attacks.update()
