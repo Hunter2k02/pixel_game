@@ -62,8 +62,23 @@ class Game:
 
         for i, row in enumerate(tilemap):
             for j, column in enumerate(row):
+
                 random_terrain = random.randint(0, 2)
-                if i < 49 and j < 99:
+                if column == "B":
+                    Boundary_blocks(
+                        self,
+                        j,
+                        i,
+                        (
+                            self.terrain_spritesheet.get_sprite(
+                                994, 643, 25, 64, WHITE
+                            ),
+                            (64, 64),
+                        ),
+                    )
+                    # 288 575
+
+                if i < 48 and j < 100:
 
                     if random_terrain == 1:
                         Ground(
@@ -134,25 +149,11 @@ class Game:
                             i,
                             (
                                 self.terrain_spritesheet.get_sprite(
-                                    96, 202, 32, 54, BLACK
+                                    96, 202, 32, 54, WHITE
                                 ),
                                 (32, 64),
                             ),
                         )
-
-                    elif column == "B":
-                        Boundary_blocks(
-                            self,
-                            j,
-                            i,
-                            (
-                                self.terrain_spritesheet.get_sprite(
-                                    994, 643, 25, 64, BLACK
-                                ),
-                                (64, 64),
-                            ),
-                        )
-
                     elif column == "e":
                         Enemy(
                             self,
@@ -188,8 +189,8 @@ class Game:
                             "images/enemies/level_1/white_mouse_spearman_attack.png",
                             "White Mouse",
                             15,
+                            50,
                             30,
-                            10,
                             2.25,
                         )
                     elif column == "b":
@@ -201,10 +202,10 @@ class Game:
                             "images/enemies/level_1/mouse_boss_attack.png",
                             "images/enemies/level_1/mouse_boss_boss_attack.png",
                             "Mouse Boss",
-                            1,
-                            1,
-                            1,
-                            1,
+                            25,
+                            200,
+                            100,
+                            2.5,
                         )
 
                     elif column == "W":
@@ -220,29 +221,196 @@ class Game:
                             ),
                         )
 
-                else:
+                elif i >= 48 and i < 66 and j < 100:
                     Ground(
                         self,
                         j,
                         i,
                         (
-                            self.terrain_spritesheet.get_sprite(64, 352, 32, 32, WHITE),
+                            self.terrain_spritesheet.get_sprite(
+                                576 + 32 * random.randint(0, 2), 352, 32, 32, WHITE
+                            ),
                             (64, 64),
                         ),
                     )
-                    if column == "B":
-                        Boundary_blocks(
+                    # 98, 64
+                    if column == "T":
+                        Ground(
                             self,
                             j,
                             i,
                             (
                                 self.terrain_spritesheet.get_sprite(
-                                    994, 640, 32, 64, BLACK
+                                    120, 86, 50, 50, WHITE
                                 ),
                                 (64, 64),
                             ),
                         )
-                        # 8,15
+                        # 876
+                    elif column == "r":
+                        Ground(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.terrain_spritesheet.get_sprite(
+                                    0, 0, 32, 64, WHITE
+                                ),
+                                (32, 64),
+                            ),
+                        )
+                    elif column == "R":
+                        r = random.randint(1, 3)
+                        if r == 1:
+                            Block(
+                                self,
+                                j,
+                                i,
+                                (
+                                    self.terrain_spritesheet.get_sprite(
+                                        768, 624, 64, 50, WHITE
+                                    ),
+                                    (64, 64),
+                                ),
+                            )
+                        elif r == 2:
+                            Block(
+                                self,
+                                j,
+                                i,
+                                (
+                                    self.terrain_spritesheet.get_sprite(
+                                        832, 624, 64, 50, WHITE
+                                    ),
+                                    (64, 64),
+                                ),
+                            )
+                        elif r == 3:
+                            Block(
+                                self,
+                                j,
+                                i,
+                                (
+                                    self.terrain_spritesheet.get_sprite(
+                                        897, 624, 30, 50, WHITE
+                                    ),
+                                    (64, 64),
+                                ),
+                            )
+
+                elif i >= 66 and j < 100:
+                    Ground(
+                        self,
+                        j,
+                        i,
+                        (
+                            self.terrain_spritesheet.get_sprite(
+                                288 + 32 * random.randint(0, 2), 160, 32, 32, WHITE
+                            ),
+                            (64, 64),
+                        ),
+                    )
+                    if column == "H":
+
+                        Block(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.terrain_spritesheet.get_sprite(
+                                    512, 0, 64, 64, WHITE
+                                ),
+                                (64, 64),
+                            ),
+                        )
+                    elif column == "u":
+                        Block(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.terrain_spritesheet.get_sprite(
+                                    480 + 32 * random.randint(0, 2), 160, 32, 32, WHITE
+                                ),
+                                (64, 64),
+                            ),
+                        )
+                    elif column == "T":
+                        Ground(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.terrain_spritesheet.get_sprite(
+                                    416 + 32 * random.randint(0, 1), 160, 32, 32, WHITE
+                                ),
+                                (64, 64),
+                            ),
+                        )
+                    elif column == "R":
+                        r = random.randint(1, 3)
+                        if r == 1:
+                            Block(
+                                self,
+                                j,
+                                i,
+                                (
+                                    self.terrain_spritesheet.get_sprite(
+                                        768, 690, 64, 50, WHITE
+                                    ),
+                                    (64, 64),
+                                ),
+                            )
+                        elif r == 2:
+                            Block(
+                                self,
+                                j,
+                                i,
+                                (
+                                    self.terrain_spritesheet.get_sprite(
+                                        832, 690, 64, 50, WHITE
+                                    ),
+                                    (64, 64),
+                                ),
+                            )
+                        elif r == 3:
+                            Block(
+                                self,
+                                j,
+                                i,
+                                (
+                                    self.terrain_spritesheet.get_sprite(
+                                        897, 690, 30, 50, WHITE
+                                    ),
+                                    (64, 64),
+                                ),
+                            )
+                if i > 46 and j > 99:
+
+                    Ground(
+                        self,
+                        j,
+                        i,
+                        (
+                            self.terrain_spritesheet.get_sprite(
+                                96 + 32 * random.randint(0, 2), 544, 32, 32, WHITE
+                            ),
+                            (64, 64),
+                        ),
+                    )
+                    if column == "s":
+                        Ground(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.terrain_spritesheet.get_sprite(
+                                    288, 575, 64, 64, WHITE
+                                ),
+                                (64, 64),
+                            ),
+                        )
+
         self.player = Player(self, WIDTH // 128, HEIGHT // 128)
         self.spawner = Spawner(self)
 
@@ -295,6 +463,8 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.basic_attack_level += 1
                     self.player.level += 1
+                    self.health_bar.remaining = self.health_bar.full
+                    self.mana_bar.remaining = self.mana_bar.full
                     self.paused_game = 0
             elif self.options[4].text == "+":
                 self.options[4].color = DARK_GREY
@@ -309,7 +479,9 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.ultimate_attack_level += 1
                     self.player.level += 1
-                    self.mana_cost = 10 + self.player.ultimate_attack_level
+                    self.mana_cost = int(self.mana_cost * 1.25)
+                    self.health_bar.remaining = self.health_bar.full
+                    self.mana_bar.remaining = self.mana_bar.full
                     self.paused_game = 0
             elif self.options[5].text == "+":
                 self.options[5].color = DARK_GREY
@@ -327,8 +499,9 @@ class Game:
                     self.player.player_speed = (
                         PLAYER_SPEED + self.player.speed_level // 4
                     )
-
                     self.max_cooldown -= 2
+                    self.health_bar.remaining = self.health_bar.full
+                    self.mana_bar.remaining = self.mana_bar.full
                     self.paused_game = 0
             elif self.options[6].text == "+":
                 self.options[6].color = DARK_GREY
@@ -343,11 +516,11 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.health_and_mana_level += 1
                     self.player.level += 1
-                    self.mana_bar.full += 20 * self.player.health_and_mana_level
-                    self.mana_bar.regen *= 1.25
+                    self.mana_bar.full += 10 * self.player.health_and_mana_level
+                    self.mana_bar.regen += self.mana_bar.regen * 0.25
+                    self.health_bar.full += 10 * self.player.health_and_mana_level
+                    self.health_bar.regen += self.health_bar.regen * 0.5
                     self.mana_bar.remaining = self.mana_bar.full
-                    self.health_bar.full += 20 * self.player.health_and_mana_level
-                    self.health_bar.regen *= 1.25
                     self.health_bar.remaining = self.health_bar.full
                     self.paused_game = 0
             elif self.options[7].text == "+":
@@ -422,12 +595,6 @@ class Game:
                         Attack(
                             self, self.player.rect.x + TILESIZE // 2, self.player.rect.y
                         )
-            if event.type == pygame.MOUSEBUTTONDOWN and self.shoot_cooldown_count == 0:
-                if event.button == 2:
-                    self.player.basic_attack_level = 12
-                    self.player.ultimate_attack_level = 12
-                    self.player.speed_level = 10
-                    self.player.health_and_mana_level = 14
 
             if (
                 event.type == pygame.MOUSEBUTTONDOWN
@@ -452,6 +619,12 @@ class Game:
                         Ultimate_attack(
                             self, self.player.rect.x + TILESIZE, self.player.rect.y
                         )
+            if (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and self.mana_bar.remaining >= self.mana_cost
+            ):
+                if event.button == 2:
+                    self.experience_bar.get(100)
 
     def cooldown(self):
         if self.shoot_cooldown_count >= self.max_cooldown:

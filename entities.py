@@ -164,6 +164,7 @@ class Player(pygame.sprite.Sprite):
         ]
 
     def update(self):
+        
         keys = pygame.key.get_pressed()
         if keys:
             self.movement(keys)
@@ -440,19 +441,71 @@ class Attack(pygame.sprite.Sprite):
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
         if hits:
-            for sprite in hits:
-                sprite.health -= self.damage
-                self.kill()
-                Temporary_text_damage(
-                    self.game,
-                    self.damage,
-                    "red",
-                    sprite.rect.x,
-                    sprite.rect.y + 32,
-                    pygame.font.Font(
-                        "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
-                    ),
-                )
+            if self.game.player.basic_attack_level < 3:
+                for sprite in hits:
+                    sprite.health -= self.damage
+
+                    self.kill()
+                    Temporary_text_damage(
+                        self.game,
+                        self.damage,
+                        "red",
+                        sprite.rect.x,
+                        sprite.rect.y + 32,
+                        pygame.font.Font(
+                            "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                        ),
+                    )
+            elif (
+                self.game.player.basic_attack_level >= 3
+                and self.game.player.basic_attack_level < 6
+            ):
+                for sprite in hits:
+                    sprite.health -= self.damage * 2
+                    self.kill()
+                    Temporary_text_damage(
+                        self.game,
+                        self.damage * 2,
+                        "red",
+                        sprite.rect.x,
+                        sprite.rect.y + 32,
+                        pygame.font.Font(
+                            "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                        ),
+                    )
+            elif (
+                self.game.player.basic_attack_level >= 6
+                and self.game.player.basic_attack_level < 9
+            ):
+                for sprite in hits:
+                    sprite.health -= self.damage * 2
+                    sprite.speed -= 0.05
+                    self.kill()
+                    Temporary_text_damage(
+                        self.game,
+                        self.damage * 2,
+                        "red",
+                        sprite.rect.x,
+                        sprite.rect.y + 32,
+                        pygame.font.Font(
+                            "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                        ),
+                    )
+            else:
+                for sprite in hits:
+                    sprite.health -= self.damage * 3
+                    sprite.speed -= 0.1
+                    self.kill()
+                    Temporary_text_damage(
+                        self.game,
+                        self.damage * 3,
+                        "red",
+                        sprite.rect.x,
+                        sprite.rect.y + 32,
+                        pygame.font.Font(
+                            "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                        ),
+                    )
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
@@ -760,7 +813,7 @@ class Ultimate_attack(Attack):
                 )
 
     def collide(self):
-        self.max_count = 3 + 3 * self.game.player.ultimate_attack_level
+        self.max_count = 1 + 1 * self.game.player.ultimate_attack_level
 
         hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
         if hits:
@@ -845,7 +898,7 @@ class Enemy_attack(pygame.sprite.Sprite):
                 self.image, 180 - math.degrees(self.angle)
             )
             self.animations = [self.image] * 35
-        if name == "Mouse Boss":
+        if name == "Boss Mouse":
             self.image = self.spritesheet.get_sprite(0, 0, 44, 30, WHITE)
             self.image = pygame.transform.scale(self.image, (32, 32))
             self.image = pygame.transform.rotate(
@@ -979,20 +1032,30 @@ class Enemy(pygame.sprite.Sprite):
             self.max_cooldown_count = 100
         elif name == "White Mouse":
             self.max_cooldown_count = 80
-        elif name == "Mouse Boss":
+        elif name == "Boss Mouse":
             self.max_cooldown_count = 70
 
     def update(self):
+        if (
+            self.name[-5:] == "Mouse"
+            and self.game.player.absolute_sprite_moved_value[0]
+            / 69268
+            // self.game.player.player_speed
+            > -73
+            and self.game.player.absolute_sprite_moved_value[1]
+            / 69268
+            // self.game.player.player_speed
+            > -35
+        ):
+            self.cooldown()
+            self.collide("x")
+            self.movement()
+            self.collide("y")
+            self.animate()
 
-        self.cooldown()
-        self.collide("x")
-        self.movement()
-        self.collide("y")
-        self.animate()
-
-        self.check_health()
-        if self.shoot_cooldown_count == 0:
-            self.attack_player()
+            self.check_health()
+            if self.shoot_cooldown_count == 0:
+                self.attack_player()
 
     def collide(self, direction):
         if self.dist < 600:
@@ -1030,32 +1093,26 @@ class Enemy(pygame.sprite.Sprite):
             self.game.player.rect.y - self.rect.y,
         )
 
-        self.x_change = 0
-        self.y_change = 0
         if self.dist < 600:
             if self.game.player.rect.x > self.rect.x:
 
                 self.rect.x += self.speed
                 self.facing = "right"
-                self.x_change = 1
 
             elif self.game.player.rect.x < self.rect.x:
 
                 self.rect.x -= self.speed
                 self.facing = "left"
-                self.x_change = 1
 
             elif self.game.player.rect.y > self.rect.y:
 
                 self.rect.y += self.speed
                 self.facing = "down"
-                self.y_change = 1
 
             elif self.game.player.rect.y < self.rect.y:
 
                 self.rect.y -= self.speed
                 self.facing = "up"
-                self.y_change = 1
 
     def animate(self):
         if self.dist < 600:
@@ -1162,7 +1219,7 @@ class Boss(Enemy):
             Boss_attack(self.game, self.rect.x, self.rect.y, self)
 
     def personalize(self, name):
-        if name == "Mouse Boss":
+        if name == "Boss Mouse":
             self.max_cooldown_count = 100
 
     def cooldown(self):
@@ -1179,7 +1236,8 @@ class Boss_attack(Enemy_attack):
         self.damage = self.enemy.damage * 3
 
     def personalize(self, name):
-        if name == "Mouse Boss":
+        if name == "Boss Mouse":
+
             self.image = self.enemy.boss_attack_spritesheet.get_sprite(
                 0, 0, 44, 30, WHITE
             )
@@ -1188,6 +1246,10 @@ class Boss_attack(Enemy_attack):
                 self.image, 290 - math.degrees(self.angle)
             )
             self.animations = [self.image] * 35
+
+    def movement(self):
+        self.rect.x = self.rect.x + int(self.dx) * 2.5
+        self.rect.y = self.rect.y + int(self.dy) * 2.5
 
 
 class Bar(pygame.sprite.Sprite):
@@ -1254,7 +1316,7 @@ class Exp_bar(Bar):
         self.remaining = 0
 
     def lose(self):
-        self.full = self.full + int((self.game.player.level // 0.7) ** 2)
+        self.full = self.full + int((self.game.player.level // 0.8) ** 2)
 
     def get(self, amount):
         if self.remaining < self.full:
@@ -1339,7 +1401,7 @@ class Spawner:
             "Grey Mouse": [],
             "Brown Mouse": [],
             "White Mouse": [],
-            "Mouse Boss": [],
+            "Boss Mouse": [],
         }
 
         self.list_of_dead_enemies = []
@@ -1378,8 +1440,8 @@ class Spawner:
                     "s",
                     len(self.hashmap_of_enemies["White Mouse"]),
                 )
-            if self.list_of_all_enemies[i].name == "Mouse Boss":
-                self.hashmap_of_enemies["Mouse Boss"].append(
+            if self.list_of_all_enemies[i].name == "Boss Mouse":
+                self.hashmap_of_enemies["Boss Mouse"].append(
                     [
                         self.list_of_all_enemies[i].rect.x // 64,
                         self.list_of_all_enemies[i].rect.y // 64,
@@ -1387,7 +1449,7 @@ class Spawner:
                 )
                 self.list_of_all_enemies[i].respawn_id = (
                     "b",
-                    len(self.hashmap_of_enemies["Mouse Boss"]),
+                    len(self.hashmap_of_enemies["Boss Mouse"]),
                 )
 
     def add(self, respawn_id):
@@ -1419,7 +1481,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
                                     self.hashmap_of_enemies["Grey Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
@@ -1427,7 +1489,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
                                     "images/enemies/level_1/grey_mouse_child.png",
                                     "images/enemies/level_1/grey_mouse_child_attack.png",
@@ -1447,7 +1509,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
                                     self.hashmap_of_enemies["Brown Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
@@ -1455,7 +1517,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
                                     "images/enemies/level_1/brown_mouse_assassin.png",
                                     "images/enemies/level_1/brown_mouse_assassin_attack.png",
@@ -1475,7 +1537,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
                                     self.hashmap_of_enemies["White Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
@@ -1483,7 +1545,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
                                     "images/enemies/level_1/white_mouse_spearman.png",
                                     "images/enemies/level_1/white_mouse_spearman_attack.png",
@@ -1497,26 +1559,26 @@ class Spawner:
                             if self.list_of_dead_enemies[i][0] == "b":
                                 Boss(
                                     self.game,
-                                    self.hashmap_of_enemies["Mouse Boss"][
+                                    self.hashmap_of_enemies["Boss Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
                                     ][0]
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
-                                    self.hashmap_of_enemies["Mouse Boss"][
+                                    self.hashmap_of_enemies["Boss Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
                                     ][1]
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // 16
+                                        // self.game.player.player_speed
                                     ),
                                     "images/enemies/level_1/mouse_boss.png",
                                     "images/enemies/level_1/mouse_boss_attack.png",
                                     "images/enemies/level_1/mouse_boss_boss_attack.png",
-                                    "Mouse Boss",
+                                    "Boss Mouse",
                                     25,
                                     200,
                                     100,
