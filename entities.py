@@ -164,7 +164,7 @@ class Player(pygame.sprite.Sprite):
         ]
 
     def update(self):
-        
+
         keys = pygame.key.get_pressed()
         if keys:
             self.movement(keys)
@@ -491,10 +491,45 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
-            else:
+            elif (
+                self.game.player.basic_attack_level >= 9
+                and self.game.player.basic_attack_level < 12
+            ):
                 for sprite in hits:
                     sprite.health -= self.damage * 3
                     sprite.speed -= 0.1
+                    self.kill()
+                    Temporary_text_damage(
+                        self.game,
+                        self.damage * 3,
+                        "red",
+                        sprite.rect.x,
+                        sprite.rect.y + 32,
+                        pygame.font.Font(
+                            "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                        ),
+                    )
+            elif (
+                self.game.player.basic_attack_level >= 12
+                and self.game.player.basic_attack_level < 15
+            ):
+                for sprite in hits:
+                    sprite.health -= self.damage * 4
+                    self.kill()
+                    Temporary_text_damage(
+                        self.game,
+                        self.damage * 3,
+                        "red",
+                        sprite.rect.x,
+                        sprite.rect.y + 32,
+                        pygame.font.Font(
+                            "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
+                        ),
+                    )
+            else:
+                for sprite in hits:
+                    sprite.health -= self.damage * 5
+                    sprite.speed -= 0.25
                     self.kill()
                     Temporary_text_damage(
                         self.game,
@@ -575,7 +610,7 @@ class Attack(pygame.sprite.Sprite):
                     384, 148, self.width, self.height * 0.75, BLACK
                 ),
             ] * (self.game.player.speed_level + 1)
-        if tier >= 3:
+        if tier == 3:
             self.animations = [
                 self.game.attack_spritesheet.get_sprite(
                     0, 212, self.width, self.height * 0.75, BLACK
@@ -608,6 +643,61 @@ class Attack(pygame.sprite.Sprite):
                     576, 212, self.width, self.height * 0.75, BLACK
                 ),
             ] * (self.game.player.speed_level + 1)
+        elif tier >= 4:
+            attack_spritesheet = Spritesheet("images/missles/icetacle.png")
+            self.animations = [
+                attack_spritesheet.get_sprite(
+                    0, 0, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    128, 0, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    256, 0, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    384, 0, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    0, 128, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    128, 128, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    256, 128, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    384, 128, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    0, 256, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    128, 256, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    256, 256, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    384, 256, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    0, 384, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    128, 384, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    256, 384, self.width * 2, self.height * 2, BLACK
+                ),
+                attack_spritesheet.get_sprite(
+                    384, 384, self.width * 2, self.height * 2, BLACK
+                ),
+            ] * (self.game.player.speed_level + 1)
+            self.image = pygame.transform.scale(
+                self.image, (TILESIZE * 2, TILESIZE * 2)
+            )
 
 
 class Ultimate_attack(Attack):
@@ -870,13 +960,14 @@ class Enemy_attack(pygame.sprite.Sprite):
         self.dy = math.sin(self.angle) * self.enemy.speed * 2
 
         self.spritesheet = self.enemy.enemy_attack_spritesheet
-
+        self.animation_speed = 0.15
         self.personalize(self.enemy.name)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
 
     def personalize(self, name):
+        print(name)
         if name == "Grey Mouse":
             self.image = self.spritesheet.get_sprite(
                 0, 0, self.width, self.height // 2, WHITE
@@ -884,13 +975,13 @@ class Enemy_attack(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(self.image, (16, 8))
             self.animations = [self.image] * 35
 
-        if name == "Brown Mouse":
+        elif name == "Brown Mouse":
             self.image = self.spritesheet.get_sprite(0, 0, 16, 8, WHITE)
             self.image = pygame.transform.scale(self.image, (32, 16))
             self.animations = [
                 pygame.transform.rotate(self.image, i * 15) for i in range(24)
             ]
-        if name == "White Mouse":
+        elif name == "White Mouse":
             self.image = self.spritesheet.get_sprite(0, 0, 55, 5, WHITE)
             self.image = pygame.transform.scale(self.image, (64, 8))
 
@@ -898,15 +989,31 @@ class Enemy_attack(pygame.sprite.Sprite):
                 self.image, 180 - math.degrees(self.angle)
             )
             self.animations = [self.image] * 35
-        if name == "Boss Mouse":
+        elif name == "Boss Mouse":
             self.image = self.spritesheet.get_sprite(0, 0, 44, 30, WHITE)
             self.image = pygame.transform.scale(self.image, (32, 32))
             self.image = pygame.transform.rotate(
                 self.image, 290 - math.degrees(self.angle)
             )
+
+            self.animations = [self.image] * 30
+        elif name == "Desert Boarman":
+            self.image = self.spritesheet.get_sprite(0, 0, 24, 22, WHITE)
+            self.image = pygame.transform.scale(self.image, (32, 32))
+            self.image = pygame.transform.rotate(
+                self.image, 180 - math.degrees(self.angle)
+            )
+            self.animation_speed = 1
             self.animations = [
-                pygame.transform.rotate(self.image, i * 10) for i in range(36)
+                pygame.transform.rotate(self.image, i * 5) for i in range(60)
             ]
+        elif name == "Desert Wolf":
+            self.image = self.spritesheet.get_sprite(0, 0, 85, 5, WHITE)
+            self.image = pygame.transform.scale(self.image, (96, 8))
+            self.image = pygame.transform.rotate(
+                self.image, 180 - math.degrees(self.angle)
+            )
+            self.animations = [self.image] * 30
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
@@ -923,7 +1030,7 @@ class Enemy_attack(pygame.sprite.Sprite):
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
-        self.animation_loop += 0.15 + (self.enemy.speed * 0.05)
+        self.animation_loop += self.animation_speed + (self.enemy.speed * 0.05)
         if self.animation_loop >= len(self.animations):
             self.kill()
 
@@ -958,10 +1065,10 @@ class Enemy(pygame.sprite.Sprite):
 
         self.facing = random.choice(["up", "down", "right", "left"])
         self.animation_loop = 0
-        enemy_spritesheet = Spritesheet(enemy_spritesheet_path)
+        self.enemy_spritesheet = Spritesheet(enemy_spritesheet_path)
         self.enemy_attack_spritesheet = Spritesheet(enemy_attack_spritesheet_path)
         self.dist = 1000
-        self.image = enemy_spritesheet.get_sprite(
+        self.image = self.enemy_spritesheet.get_sprite(
             1, 128, self.width, self.height, WHITE
         )
         self.rect = self.image.get_rect()
@@ -976,51 +1083,51 @@ class Enemy(pygame.sprite.Sprite):
         self.experience = exp
         self.shoot_cooldown_count = 0
         self.up_animations = [
-            enemy_spritesheet.get_sprite(0, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(64, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(128, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(192, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(256, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(320, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(384, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(448, 0, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(512, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(0, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(64, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(128, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(192, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(256, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(320, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(384, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(448, 0, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(512, 0, self.width, self.height, WHITE),
         ]
 
         self.down_animations = [
-            enemy_spritesheet.get_sprite(0, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(64, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(128, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(192, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(256, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(320, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(384, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(448, 128, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(512, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(0, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(64, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(128, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(192, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(256, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(320, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(384, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(448, 128, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(512, 128, self.width, self.height, WHITE),
         ]
 
         self.right_animations = [
-            enemy_spritesheet.get_sprite(0, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(64, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(128, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(192, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(256, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(320, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(384, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(448, 192, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(512, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(0, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(64, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(128, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(192, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(256, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(320, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(384, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(448, 192, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(512, 192, self.width, self.height, WHITE),
         ]
 
         self.left_animations = [
-            enemy_spritesheet.get_sprite(0, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(64, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(128, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(192, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(256, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(320, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(384, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(448, 64, self.width, self.height, WHITE),
-            enemy_spritesheet.get_sprite(512, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(0, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(64, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(128, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(192, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(256, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(320, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(384, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(448, 64, self.width, self.height, WHITE),
+            self.enemy_spritesheet.get_sprite(512, 64, self.width, self.height, WHITE),
         ]
         self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 64, 32, BLACK)
         self.personalize(self.name)
@@ -1034,18 +1141,166 @@ class Enemy(pygame.sprite.Sprite):
             self.max_cooldown_count = 80
         elif name == "Boss Mouse":
             self.max_cooldown_count = 70
+        elif name == "Desert Boarman":
+            self.max_cooldown_count = 80
+        elif name == "Desert Wolf":
+            self.max_cooldown_count = 60
+
+            self.up_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 0, self.width * 2, self.height, WHITE
+                ),
+            ]
+
+            self.down_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 128, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 128, self.width * 2, self.height, WHITE
+                ),
+            ]
+
+            self.right_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 192, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 192, self.width * 2, self.height, WHITE
+                ),
+            ]
+
+            self.left_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 64, self.width * 2, self.height, WHITE
+                ),
+            ]
 
     def update(self):
         if (
             self.name[-5:] == "Mouse"
-            and self.game.player.absolute_sprite_moved_value[0]
-            / 69268
-            // self.game.player.player_speed
-            > -73
-            and self.game.player.absolute_sprite_moved_value[1]
-            / 69268
-            // self.game.player.player_speed
-            > -35
+            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
+            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 > -37
+        ):
+            self.cooldown()
+            self.collide("x")
+            self.movement()
+            self.collide("y")
+            self.animate()
+
+            self.check_health()
+            if self.shoot_cooldown_count == 0:
+                self.attack_player()
+
+        elif (
+            self.name[:6] == "Desert"
+            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
+            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -36
+        ):
+
+            self.cooldown()
+            self.collide("x")
+            self.movement()
+            self.collide("y")
+            self.animate()
+
+            self.check_health()
+            if self.shoot_cooldown_count == 0:
+                self.attack_player()
+        elif (
+            self.name[:5] == "burnt"
+            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 < -80
+            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -55
         ):
             self.cooldown()
             self.collide("x")
@@ -1402,6 +1657,8 @@ class Spawner:
             "Brown Mouse": [],
             "White Mouse": [],
             "Boss Mouse": [],
+            "Desert Boarman": [],
+            "Desert Wolf": [],
         }
 
         self.list_of_dead_enemies = []
@@ -1418,7 +1675,7 @@ class Spawner:
                     "e",
                     len(self.hashmap_of_enemies["Grey Mouse"]),
                 )
-            if self.list_of_all_enemies[i].name == "Brown Mouse":
+            elif self.list_of_all_enemies[i].name == "Brown Mouse":
                 self.hashmap_of_enemies["Brown Mouse"].append(
                     [
                         self.list_of_all_enemies[i].rect.x // 64,
@@ -1429,7 +1686,7 @@ class Spawner:
                     "a",
                     len(self.hashmap_of_enemies["Brown Mouse"]),
                 )
-            if self.list_of_all_enemies[i].name == "White Mouse":
+            elif self.list_of_all_enemies[i].name == "White Mouse":
                 self.hashmap_of_enemies["White Mouse"].append(
                     [
                         self.list_of_all_enemies[i].rect.x // 64,
@@ -1440,7 +1697,7 @@ class Spawner:
                     "s",
                     len(self.hashmap_of_enemies["White Mouse"]),
                 )
-            if self.list_of_all_enemies[i].name == "Boss Mouse":
+            elif self.list_of_all_enemies[i].name == "Boss Mouse":
                 self.hashmap_of_enemies["Boss Mouse"].append(
                     [
                         self.list_of_all_enemies[i].rect.x // 64,
@@ -1448,8 +1705,30 @@ class Spawner:
                     ]
                 )
                 self.list_of_all_enemies[i].respawn_id = (
-                    "b",
+                    "M",
                     len(self.hashmap_of_enemies["Boss Mouse"]),
+                )
+            elif self.list_of_all_enemies[i].name == "Desert Boarman":
+                self.hashmap_of_enemies["Desert Boarman"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "b",
+                    len(self.hashmap_of_enemies["Desert Boarman"]),
+                )
+            elif self.list_of_all_enemies[i].name == "Desert Wolf":
+                self.hashmap_of_enemies["Desert Wolf"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "w",
+                    len(self.hashmap_of_enemies["Desert Wolf"]),
                 )
 
     def add(self, respawn_id):
@@ -1481,7 +1760,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     self.hashmap_of_enemies["Grey Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
@@ -1489,7 +1768,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     "images/enemies/level_1/grey_mouse_child.png",
                                     "images/enemies/level_1/grey_mouse_child_attack.png",
@@ -1500,7 +1779,7 @@ class Spawner:
                                     1.35,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
-                            if self.list_of_dead_enemies[i][0] == "a":
+                            elif self.list_of_dead_enemies[i][0] == "a":
                                 Enemy(
                                     self.game,
                                     self.hashmap_of_enemies["Brown Mouse"][
@@ -1509,7 +1788,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     self.hashmap_of_enemies["Brown Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
@@ -1517,7 +1796,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     "images/enemies/level_1/brown_mouse_assassin.png",
                                     "images/enemies/level_1/brown_mouse_assassin_attack.png",
@@ -1528,7 +1807,7 @@ class Spawner:
                                     2,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
-                            if self.list_of_dead_enemies[i][0] == "s":
+                            elif self.list_of_dead_enemies[i][0] == "s":
                                 Enemy(
                                     self.game,
                                     self.hashmap_of_enemies["White Mouse"][
@@ -1537,7 +1816,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     self.hashmap_of_enemies["White Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
@@ -1545,7 +1824,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     "images/enemies/level_1/white_mouse_spearman.png",
                                     "images/enemies/level_1/white_mouse_spearman_attack.png",
@@ -1556,7 +1835,7 @@ class Spawner:
                                     2.25,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
-                            if self.list_of_dead_enemies[i][0] == "b":
+                            elif self.list_of_dead_enemies[i][0] == "M":
                                 Boss(
                                     self.game,
                                     self.hashmap_of_enemies["Boss Mouse"][
@@ -1565,7 +1844,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[0]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     self.hashmap_of_enemies["Boss Mouse"][
                                         self.list_of_all_enemies[j].respawn_id[1] - 1
@@ -1573,7 +1852,7 @@ class Spawner:
                                     + (
                                         self.game.player.absolute_sprite_moved_value[1]
                                         / 69268
-                                        // self.game.player.player_speed
+                                        // 16
                                     ),
                                     "images/enemies/level_1/mouse_boss.png",
                                     "images/enemies/level_1/mouse_boss_attack.png",
@@ -1585,7 +1864,33 @@ class Spawner:
                                     2.5,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
-
+                            elif self.list_of_dead_enemies[i][0] == "b":
+                                Enemy(
+                                    self,
+                                    j,
+                                    i,
+                                    "images/enemies/level_2/desert_boarman.png",
+                                    "images/enemies/level_2/desert_boarman_attack.png",
+                                    "Desert Boarman",
+                                    25,
+                                    225,
+                                    75,
+                                    2.25,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                        elif self.list_of_dead_enemies[i][0] == "w":
+                            Enemy(
+                                self,
+                                j,
+                                i,
+                                "images/enemies/level_2/desert_wolf.png",
+                                "images/enemies/level_2/desert_wolf_attack.png",
+                                30,
+                                250,
+                                100,
+                                2.75,
+                                respawn_id=self.list_of_dead_enemies[i],
+                            )
                 self.list_of_dead_enemies = []  # Reset the list
                 self.current = self.respawn_time  # Reset the timer
         else:

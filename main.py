@@ -45,6 +45,7 @@ class Game:
         self.terrain_spritesheet = Spritesheet("images/terrain/terrain.png")
         self.attack_spritesheet = Spritesheet("images/missles/spikes.png")
         self.ultimate_attack_spritesheet = Spritesheet("images/missles/tornado.png")
+        self.skull_spritesheet = Spritesheet("images/enemies/level_2/skull.png")
         self.mana_cost = 10
 
     def create_tilemap(self):
@@ -201,7 +202,7 @@ class Game:
                             "images/enemies/level_1/mouse_boss.png",
                             "images/enemies/level_1/mouse_boss_attack.png",
                             "images/enemies/level_1/mouse_boss_boss_attack.png",
-                            "Mouse Boss",
+                            "Boss Mouse",
                             25,
                             200,
                             100,
@@ -221,7 +222,7 @@ class Game:
                             ),
                         )
 
-                elif i >= 48 and i < 66 and j < 100:
+                elif i >= 48 and i < 71 and j < 100:
                     Ground(
                         self,
                         j,
@@ -233,7 +234,32 @@ class Game:
                             (64, 64),
                         ),
                     )
-                    # 98, 64
+                    if column == "b":
+                        Enemy(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_2/desert_boarman.png",
+                            "images/enemies/level_2/desert_boarman_attack.png",
+                            "Desert Boarman",
+                            25,
+                            225,
+                            75,
+                            2.25,
+                        )
+                    if column == "w":
+                        Enemy(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_2/desert_wolf.png",
+                            "images/enemies/level_2/desert_wolf_attack.png",
+                            "Desert Wolf",
+                            30,
+                            250,
+                            100,
+                            2.75,
+                        )
                     if column == "T":
                         Ground(
                             self,
@@ -297,8 +323,22 @@ class Game:
                                     (64, 64),
                                 ),
                             )
+                    elif column == "s":
+                        Ground(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.skull_spritesheet.get_sprite(
+                                    0, 128, 64, 64, WHITE
+                                ),
+                                (64, 64),
+                            ),
+                        )
 
-                elif i >= 66 and j < 100:
+                elif i >= 71 and j < 100:
+
+                    # Base
                     Ground(
                         self,
                         j,
@@ -310,6 +350,10 @@ class Game:
                             (64, 64),
                         ),
                     )
+
+                    # Enemies
+
+                    # Blocks and decorations
                     if column == "H":
 
                         Block(
@@ -385,7 +429,19 @@ class Game:
                                     (64, 64),
                                 ),
                             )
-                if i > 46 and j > 99:
+                    elif column == "s":
+                        Ground(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.skull_spritesheet.get_sprite(
+                                    0, 128, 64, 64, WHITE
+                                ),
+                                (64, 64),
+                            ),
+                        )
+                if i > 45 and j > 99:
 
                     Ground(
                         self,
@@ -398,7 +454,7 @@ class Game:
                             (64, 64),
                         ),
                     )
-                    if column == "s":
+                    if column == "S":
                         Ground(
                             self,
                             j,
@@ -406,6 +462,18 @@ class Game:
                             (
                                 self.terrain_spritesheet.get_sprite(
                                     288, 575, 64, 64, WHITE
+                                ),
+                                (64, 64),
+                            ),
+                        )
+                    elif column == "s":
+                        Ground(
+                            self,
+                            j,
+                            i,
+                            (
+                                self.skull_spritesheet.get_sprite(
+                                    0, 128, 64, 64, WHITE
                                 ),
                                 (64, 64),
                             ),
@@ -624,7 +692,7 @@ class Game:
                 and self.mana_bar.remaining >= self.mana_cost
             ):
                 if event.button == 2:
-                    self.experience_bar.get(100)
+                    self.experience_bar.get(10000)
 
     def cooldown(self):
         if self.shoot_cooldown_count >= self.max_cooldown:
@@ -745,7 +813,7 @@ class Game:
                 WIDTH * 0.75,
                 HEIGHT * 0.125,
                 self.player.basic_attack_level,
-                12,
+                15,
                 "grey",
                 "blue",
             ),
