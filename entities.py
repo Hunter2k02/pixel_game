@@ -7,10 +7,36 @@ from text import *
 
 
 class Spritesheet:
+    """
+    A class representing a spritesheet.
+
+    Attributes:
+        sheet (pygame.Surface): The spritesheet image.
+
+    Methods:
+        __init__(self, file): Initializes the Spritesheet object.
+        get_sprite(self, x, y, width, height, colorkey): Extracts a sprite from the spritesheet.
+
+    """
+
     def __init__(self, file):
         self.sheet = pygame.image.load(file).convert()
 
     def get_sprite(self, x, y, width, height, colorkey):
+        """
+        Extracts a sprite from the spritesheet.
+
+        Args:
+            x (int): The x-coordinate of the top-left corner of the sprite.
+            y (int): The y-coordinate of the top-left corner of the sprite.
+            width (int): The width of the sprite.
+            height (int): The height of the sprite.
+            colorkey (tuple): The color key used for transparency.
+
+        Returns:
+            pygame.Surface: The extracted sprite.
+
+        """
         sprite = pygame.Surface([width, height])
         sprite.set_colorkey(colorkey)
         sprite.blit(self.sheet, (0, 0), (x, y, width, height))
@@ -18,7 +44,43 @@ class Spritesheet:
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
+    """
+    Represents the player character in the game.
+
+    Attributes:
+        game (Game): The instance of the Game class.
+        x (int): The x-coordinate of the player's position.
+        y (int): The y-coordinate of the player's position.
+        width (int): The width of the player's sprite.
+        height (int): The height of the player's sprite.
+        absolute_sprite_moved_value (tuple): The absolute value of the player's sprite movement.
+        x_change (int): The change in x-coordinate of the player's position.
+        y_change (int): The change in y-coordinate of the player's position.
+        facing (str): The direction the player is facing.
+        animation_loop (int): The current animation loop count.
+        level (int): The player's level.
+        basic_attack_level (int): The level of the player's basic attack.
+        ultimate_attack_level (int): The level of the player's ultimate attack.
+        speed_level (int): The level of the player's speed.
+        health_and_mana_level (int): The level of the player's health and mana.
+        basic_attack_damage (int): The damage of the player's basic attack.
+        ultimate_attack_damage (int): The damage of the player's ultimate attack.
+        image (Surface): The image of the player's sprite.
+        rect (Rect): The rectangle representing the player's position and size.
+        player_speed (int): The speed of the player's movement.
+        up_animations (list): The list of up-facing animation frames.
+        down_animations (list): The list of down-facing animation frames.
+        right_animations (list): The list of right-facing animation frames.
+        left_animations (list): The list of left-facing animation frames.
+    Methods:
+        update(self): Updates the player's position and sprite.
+        movement(self, keys): Moves the player based on the keys pressed.
+        collide(self, direction): Checks for collisions with blocks.
+        animate(self): Animates the player's sprite based on the direction they are facing.
+        get_center(self): Returns the center of the player's sprite.
+    """
+
+    def __init__(self, game, x: int, y: int):
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites
@@ -164,7 +226,9 @@ class Player(pygame.sprite.Sprite):
         ]
 
     def update(self):
-
+        """ "
+        Updates the player's position and sprite.
+        """
         keys = pygame.key.get_pressed()
         if keys:
             self.movement(keys)
@@ -179,10 +243,20 @@ class Player(pygame.sprite.Sprite):
             self.y_change = 0
 
     def movement(self, keys):
+        """
+        Move the player and update the sprite positions based on the keys pressed.
+
+        Args:
+            keys (dict): A dictionary containing the state of all keyboard keys.
+
+        Returns:
+            None
+        """
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             for sprite in self.game.all_sprites:
                 sprite.rect.x += self.player_speed
+                # Update the absolute value of the player's sprite movement
                 self.absolute_sprite_moved_value = (
                     self.absolute_sprite_moved_value[0] + self.player_speed,
                     self.absolute_sprite_moved_value[1],
@@ -195,21 +269,21 @@ class Player(pygame.sprite.Sprite):
             self.facing = "left"
 
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            # Move all the sprites to the left
             for sprite in self.game.all_sprites:
                 sprite.rect.x -= self.player_speed
                 self.absolute_sprite_moved_value = (
                     self.absolute_sprite_moved_value[0] - self.player_speed,
                     self.absolute_sprite_moved_value[1],
                 )
-
+            # Move the attacks relative to the player
             for sprite in self.game.attacks:
                 sprite.rect.x -= self.player_speed
-
+            # Update the player's x-coordinate by sprite movement
             self.x_change += self.player_speed
             self.facing = "right"
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-
             for sprite in self.game.all_sprites:
                 sprite.rect.y += self.player_speed
                 self.absolute_sprite_moved_value = (
@@ -239,12 +313,21 @@ class Player(pygame.sprite.Sprite):
 
     def collide(self, direction):
         # https://stackoverflow.com/questions/20180594/pygame-collision-by-sides-of-sprite
+        """
+        Attribute:
+            direction (str): The direction of the collision.
+        Description:
+            Checks for collisions with blocks.
+        """
+        # Check for collisions with blocks on x-axis
         if direction == "x":
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
             if hits:
+                # If the player is moving to the right
                 if self.x_change > 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.x += self.player_speed
+                        # Update the absolute value of the player's sprite movement when colliding with blocks
                         self.absolute_sprite_moved_value = (
                             self.absolute_sprite_moved_value[0] + self.player_speed,
                             self.absolute_sprite_moved_value[1],
@@ -253,6 +336,7 @@ class Player(pygame.sprite.Sprite):
                         sprite.rect.x += self.player_speed
                     self.rect.x = hits[0].rect.left - self.rect.width
 
+                # If the player is moving to the left
                 if self.x_change < 0:
 
                     for sprite in self.game.all_sprites:
@@ -264,10 +348,11 @@ class Player(pygame.sprite.Sprite):
                     for sprite in self.game.attacks:
                         sprite.rect.x -= self.player_speed
                     self.rect.x = hits[0].rect.right
-
+        # Check for collisions with blocks on y-axis
         if direction == "y":
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
             if hits:
+                # If the player is moving down
                 if self.y_change > 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.y += self.player_speed
@@ -279,6 +364,7 @@ class Player(pygame.sprite.Sprite):
                     for sprite in self.game.attacks:
                         sprite.rect.y += self.player_speed
                     self.rect.y = hits[0].rect.top - self.rect.height
+                # If the player is moving up
                 if self.y_change < 0:
                     for sprite in self.game.all_sprites:
                         sprite.rect.y -= self.player_speed
@@ -291,11 +377,15 @@ class Player(pygame.sprite.Sprite):
                     self.rect.y = hits[0].rect.bottom
 
     def animate(self):
-
+        """
+        Animates the player's sprite based on the direction they are facing.
+        """
         if self.facing == "down":
             if self.y_change == 0:
+                # If the player is not moving, display the first frame of the down-facing animation
                 self.image = self.down_animations[0]
             else:
+                # If the player is moving, display the animation frames
                 self.image = self.down_animations[math.floor(self.animation_loop)]
                 self.animation_loop += 0.15
                 if self.animation_loop >= 7:
@@ -334,8 +424,28 @@ class Player(pygame.sprite.Sprite):
 
 # BLOCKS
 class Block(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, Spritesheet):
+    """
+    Represents a block in the game.
 
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the block.
+        y (int): The y-coordinate of the block.
+        Spritesheet (list): The spritesheet used for the block.
+
+    """
+
+    def __init__(self, game, x, y, Spritesheet):
+        """
+        Initializes a new instance of the Block class.
+
+        Args:
+            game (Game): The game instance.
+            x (int): The x-coordinate of the block.
+            y (int): The y-coordinate of the block.
+            Spritesheet (list): The spritesheet used for the block.
+
+        """
         self.game = game
         self._layer = BLOCK_LAYER
         self.groups = self.game.all_sprites, self.game.blocks
@@ -360,6 +470,17 @@ class Boundary_blocks(Block):
 
 
 class Ground(pygame.sprite.Sprite):
+    """
+    A class representing the ground in the game.
+
+    Attributes:
+        game (Game): The instance of the Game class.
+        x (int): The x-coordinate of the ground.
+        y (int): The y-coordinate of the ground.
+        Spritesheet[0] (Surface): The spritesheet used for the ground.
+        Spritesheet[1] (tuple): The size of the ground.
+    """
+
     def __init__(self, game, x, y, Spritesheet):
         self.game = game
         self._layer = GROUND_LAYER
@@ -378,6 +499,32 @@ class Ground(pygame.sprite.Sprite):
 
 
 class Attack(pygame.sprite.Sprite):
+    """
+    Represents an attack in the game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the attack.
+        y (int): The y-coordinate of the attack.
+        width (int): The width of the attack.
+        height (int): The height of the attack.
+        direction (str): The direction the attack is facing.
+        animation_loop (float): The current animation frame of the attack.
+        damage (int): The damage inflicted by the attack.
+        dx (float): The horizontal movement speed of the attack.
+        dy (float): The vertical movement speed of the attack.
+        image (Surface): The image of the attack.
+        rect (Rect): The rectangular area occupied by the attack.
+        animations (list): The list of animation frames for the attack.
+
+    Methods:
+        __init__(self, game, x, y): Initializes a new instance of the Attack class.
+        update(self): Updates the attack.
+        collide(self): Handles collision with enemies.
+        animate(self): Animates the attack.
+        movement(self): Moves the attack.
+        upgrade_attack_tier(self, tier): Upgrades the attack to a higher tier.
+    """
 
     def __init__(self, game, x, y):
         self.game = game
@@ -390,14 +537,24 @@ class Attack(pygame.sprite.Sprite):
         self.height = TILESIZE
         self.direction = self.game.player.facing
         self.animation_loop = 0
+
         self.damage = (
             self.game.player.basic_attack_damage
             + 3 * self.game.player.basic_attack_level
         )
         mouse_position = pygame.mouse.get_pos()
 
+        # Calculate the angle between the player and the mouse
+        # The angle is used to determine the direction of the attack
+        # and the speed of the attack
+        # The attack moves towards the mouse
+        # The attack moves faster if the mouse is further away
+        # The attack moves slower if the mouse is closer
+
         angle = math.atan2(mouse_position[1] - self.y, mouse_position[0] - self.x)
+        # Calculate the horizontal movement speed of the attack
         self.dx = math.cos(angle) * self.game.player.player_speed
+        # Calculate the vertical movement speed of the attack
         self.dy = math.sin(angle) * self.game.player.player_speed
 
         self.image = self.game.attack_spritesheet.get_sprite(
@@ -407,6 +564,7 @@ class Attack(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+        # Base attack animations
         self.animations = [
             self.game.attack_spritesheet.get_sprite(
                 20, 30, self.width, self.height * 0.75, BLACK
@@ -434,13 +592,16 @@ class Attack(pygame.sprite.Sprite):
             self.upgrade_attack_tier(self.game.player.basic_attack_level // 3)
 
     def update(self):
+
         self.collide()
         self.movement()
         self.animate()
 
     def collide(self):
+        # Check for collisions with enemies
         hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
         if hits:
+            # If the player's basic attack level is less than 3
             if self.game.player.basic_attack_level < 3:
                 for sprite in hits:
                     sprite.health -= self.damage
@@ -456,6 +617,7 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
+                    # If the player's basic attack level is between 3 and 6
             elif (
                 self.game.player.basic_attack_level >= 3
                 and self.game.player.basic_attack_level < 6
@@ -473,6 +635,7 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
+                    # If the player's basic attack level is between 6 and 9
             elif (
                 self.game.player.basic_attack_level >= 6
                 and self.game.player.basic_attack_level < 9
@@ -491,6 +654,7 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
+                    # If the player's basic attack level is between 9 and 12
             elif (
                 self.game.player.basic_attack_level >= 9
                 and self.game.player.basic_attack_level < 12
@@ -509,6 +673,7 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
+                    # If the player's basic attack level is between 12 and 15
             elif (
                 self.game.player.basic_attack_level >= 12
                 and self.game.player.basic_attack_level < 15
@@ -526,6 +691,7 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
+                    # If the player's basic attack level is greater than 15
             else:
                 for sprite in hits:
                     sprite.health -= self.damage * 5
@@ -553,6 +719,8 @@ class Attack(pygame.sprite.Sprite):
         self.rect.y = self.rect.y + int(self.dy)
 
     def upgrade_attack_tier(self, tier):
+        # Upgrade the attack to a higher tier based on the player's basic attack level and speed level (speed level affects the number of attack animations) and
+        # the tier of the attack (tier 1, 2, 3, or 4)
         if tier == 1:
             self.animations = [
                 self.game.attack_spritesheet.get_sprite(
@@ -701,6 +869,30 @@ class Attack(pygame.sprite.Sprite):
 
 
 class Ultimate_attack(Attack):
+    """
+    Represents the ultimate attack in the game.
+
+    Inherits from the Attack class.
+
+    Attributes:
+    - game (Game): The game instance.
+    - x (int): The x-coordinate of the ultimate attack.
+    - y (int): The y-coordinate of the ultimate attack.
+    - width (int): The width of the ultimate attack.
+    - height (int): The height of the ultimate attack.
+    - animations (list): List of animation frames for the ultimate attack.
+    - image (Surface): The current image of the ultimate attack.
+    - damage (int): The damage caused by the ultimate attack.
+    - rect (Rect): The rectangular area occupied by the ultimate attack.
+    - count (int): The count of how many times the ultimate attack has hit an enemy.
+
+    Methods:
+    - __init__(self, game, x, y): Initializes the Ultimate_attack instance.
+    - upgrade_attack_tier(self, tier): Upgrades the attack tier of the ultimate attack.
+    - collide(self): Handles collision detection and damage calculation for the ultimate attack.
+    - animate(self): Animates the ultimate attack by updating the current image.
+    """
+
     def __init__(self, game, x, y):
         super().__init__(game, x, y)
         self.width *= 2
@@ -967,7 +1159,7 @@ class Enemy_attack(pygame.sprite.Sprite):
         self.rect.y = self.y
 
     def personalize(self, name):
-        print(name)
+
         if name == "Grey Mouse":
             self.image = self.spritesheet.get_sprite(
                 0, 0, self.width, self.height // 2, WHITE
@@ -1014,6 +1206,25 @@ class Enemy_attack(pygame.sprite.Sprite):
                 self.image, 180 - math.degrees(self.angle)
             )
             self.animations = [self.image] * 30
+        elif name == "Desert Wartotaur":
+            self.image = self.spritesheet.get_sprite(0, 0, 60, 47, WHITE)
+            self.image = pygame.transform.scale(self.image, (32, 32))
+            self.image = pygame.transform.rotate(
+                self.image, 240 - math.degrees(self.angle)
+            )
+            self.animations = [self.image] * 30
+        elif name == "Desert Boss":
+            self.image = self.enemy.enemy_attack_spritesheet.get_sprite(
+                0, 0, 64, 64, WHITE
+            )
+            self.image = pygame.transform.scale(self.image, (32, 32))
+            self.animation_speed = 1.25
+            self.animations = [
+                self.enemy.enemy_attack_spritesheet.get_sprite(0, 0, 64, 64, WHITE),
+                self.enemy.enemy_attack_spritesheet.get_sprite(0, 64, 64, 64, WHITE),
+                self.enemy.enemy_attack_spritesheet.get_sprite(0, 128, 64, 64, WHITE),
+                self.enemy.enemy_attack_spritesheet.get_sprite(0, 192, 64, 64, WHITE),
+            ] * 20
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
@@ -1129,8 +1340,8 @@ class Enemy(pygame.sprite.Sprite):
             self.enemy_spritesheet.get_sprite(448, 64, self.width, self.height, WHITE),
             self.enemy_spritesheet.get_sprite(512, 64, self.width, self.height, WHITE),
         ]
-        self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 64, 32, BLACK)
         self.personalize(self.name)
+        self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 64, 32, BLACK)
 
     def personalize(self, name):
         if name == "Grey Mouse":
@@ -1139,8 +1350,6 @@ class Enemy(pygame.sprite.Sprite):
             self.max_cooldown_count = 100
         elif name == "White Mouse":
             self.max_cooldown_count = 80
-        elif name == "Boss Mouse":
-            self.max_cooldown_count = 70
         elif name == "Desert Boarman":
             self.max_cooldown_count = 80
         elif name == "Desert Wolf":
@@ -1178,61 +1387,61 @@ class Enemy(pygame.sprite.Sprite):
 
             self.down_animations = [
                 self.enemy_spritesheet.get_sprite(
-                    0, 128, self.width * 2, self.height, WHITE
+                    0, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    128, 128, self.width * 2, self.height, WHITE
+                    128, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    256, 128, self.width * 2, self.height, WHITE
+                    256, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    384, 128, self.width * 2, self.height, WHITE
+                    384, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    512, 128, self.width * 2, self.height, WHITE
+                    512, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    640, 128, self.width * 2, self.height, WHITE
+                    640, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    768, 128, self.width * 2, self.height, WHITE
+                    768, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    896, 128, self.width * 2, self.height, WHITE
+                    896, 140, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    1024, 128, self.width * 2, self.height, WHITE
+                    1024, 140, self.width * 2, self.height, WHITE
                 ),
             ]
 
             self.right_animations = [
                 self.enemy_spritesheet.get_sprite(
-                    0, 192, self.width * 2, self.height, WHITE
+                    0, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    128, 192, self.width * 2, self.height, WHITE
+                    128, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    256, 192, self.width * 2, self.height, WHITE
+                    256, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    384, 192, self.width * 2, self.height, WHITE
+                    384, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    512, 192, self.width * 2, self.height, WHITE
+                    512, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    640, 192, self.width * 2, self.height, WHITE
+                    640, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    768, 192, self.width * 2, self.height, WHITE
+                    768, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    896, 192, self.width * 2, self.height, WHITE
+                    896, 223, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    1024, 192, self.width * 2, self.height, WHITE
+                    1024, 223, self.width * 2, self.height, WHITE
                 ),
             ]
 
@@ -1265,6 +1474,180 @@ class Enemy(pygame.sprite.Sprite):
                     1024, 64, self.width * 2, self.height, WHITE
                 ),
             ]
+        elif name == "Desert Wartotaur":
+            self.max_cooldown_count = 80
+        elif name == "Burnt Imp":
+            self.max_cooldown_count = 60
+            self.up_animations = [
+                self.enemy_spritesheet.get_sprite(0, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(128, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(256, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(384, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(512, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(640, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(768, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(896, 0, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(1024, 0, 130, 73, WHITE),
+            ]
+
+            self.down_animations = [
+                self.enemy_spritesheet.get_sprite(0, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(128, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(256, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(384, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(512, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(640, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(768, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(896, 73, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(1024, 73, 130, 73, WHITE),
+            ]
+
+            self.right_animations = [
+                self.enemy_spritesheet.get_sprite(0, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(128, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(256, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(384, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(512, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(640, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(768, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(896, 223, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(1024, 223, 130, 73, WHITE),
+            ]
+
+            self.left_animations = [
+                self.enemy_spritesheet.get_sprite(0, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(128, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(256, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(384, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(512, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(640, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(768, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(896, 64, 130, 73, WHITE),
+                self.enemy_spritesheet.get_sprite(1024, 64, 130, 73, WHITE),
+            ]
+        elif name == "Burnt Succubus":
+            self.max_cooldown_count = 60
+            self.up_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 0, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 0, self.width * 2, self.height, WHITE
+                ),
+            ]
+
+            self.down_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 140, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 140, self.width * 2, self.height, WHITE
+                ),
+            ]
+
+            self.right_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 223, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 223, self.width * 2, self.height, WHITE
+                ),
+            ]
+
+            self.left_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    640, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    768, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    896, 64, self.width * 2, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    1024, 64, self.width * 2, self.height, WHITE
+                ),
+            ]
+        elif name == "Burnt Fallen Angel":
+            self.max_cooldown_count = 25
 
     def update(self):
         if (
@@ -1298,7 +1681,7 @@ class Enemy(pygame.sprite.Sprite):
             if self.shoot_cooldown_count == 0:
                 self.attack_player()
         elif (
-            self.name[:5] == "burnt"
+            self.name[:5] == "Burnt"
             and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 < -80
             and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -55
         ):
@@ -1457,28 +1840,82 @@ class Boss(Enemy):
             health,
             exp,
             speed,
+            respawn_id=respawn_id,
         )
         self.boss_attack_spritesheet = Spritesheet(boss_attack_spritesheet_path)
         self.max_cooldown_count = 75
         self.ultimate_cooldown_count = 0
-        self.ultimate_cooldown_max = 500
+        self.ultimate_cooldown_max = 100
+        self.personalize(self.name)
 
     def update(self):
-        super().update()
-        if self.ultimate_cooldown_count == 0:
-            self.ultimate_attack_player()
+        if (
+            self.name[-5:] == "Mouse"
+            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
+            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 > -37
+        ):
+            self.cooldown()
+            self.cooldown_ultimate()
+            self.collide("x")
+            self.movement()
+            self.collide("y")
+            self.animate()
+
+            self.check_health()
+            if self.shoot_cooldown_count == 0:
+                self.attack_player()
+            if self.ultimate_cooldown_count == 0:
+                self.ultimate_attack_player()
+        elif (
+            self.name[:6] == "Desert"
+            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
+            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -36
+        ):
+
+            self.cooldown()
+            self.cooldown_ultimate()
+            self.collide("x")
+            self.movement()
+            self.collide("y")
+            self.animate()
+
+            self.check_health()
+            if self.shoot_cooldown_count == 0:
+                self.attack_player()
+            if self.ultimate_cooldown_count == 0:
+                self.ultimate_attack_player()
+        elif (
+            self.name[:5] == "Burnt"
+            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 < -80
+            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -55
+        ):
+            self.cooldown()
+            self.cooldown_ultimate()
+            self.collide("x")
+            self.movement()
+            self.collide("y")
+            self.animate()
+
+            self.check_health()
+            if self.shoot_cooldown_count == 0:
+                self.attack_player()
+            if self.ultimate_cooldown_count == 0:
+                self.ultimate_attack_player()
 
     def ultimate_attack_player(self):
+        self.ultimate_cooldown_count += 1
         if self.dist < 600:
-            self.ultimate_cooldown_count += 1
             Boss_attack(self.game, self.rect.x, self.rect.y, self)
 
     def personalize(self, name):
         if name == "Boss Mouse":
-            self.max_cooldown_count = 100
+            self.max_cooldown_count = 50
+        elif name == "Desert Boss":
+            self.max_cooldown_count = 25
+            self.ultimate_cooldown_max = 200
 
-    def cooldown(self):
-        super().cooldown()
+    def cooldown_ultimate(self):
+
         if self.ultimate_cooldown_count >= self.ultimate_cooldown_max:
             self.ultimate_cooldown_count = 0
         elif self.ultimate_cooldown_count > 0:
@@ -1489,6 +1926,7 @@ class Boss_attack(Enemy_attack):
     def __init__(self, game, x, y, enemy):
         super().__init__(game, x, y, enemy)
         self.damage = self.enemy.damage * 3
+        self.personalize(self.enemy.name)
 
     def personalize(self, name):
         if name == "Boss Mouse":
@@ -1501,6 +1939,19 @@ class Boss_attack(Enemy_attack):
                 self.image, 290 - math.degrees(self.angle)
             )
             self.animations = [self.image] * 35
+        elif name == "Desert Boss":
+            self.image = self.enemy.boss_attack_spritesheet.get_sprite(
+                0, 0, 45, 23, WHITE
+            )
+            self.image = pygame.transform.scale(self.image, (128, 64))
+            self.animation_speed = 1
+            self.animations = [
+                pygame.transform.rotate(self.image, i * 5) for i in range(60)
+            ]
+            self.damage = self.enemy.damage * 5
+            self.image = self.enemy.boss_attack_spritesheet.get_sprite(
+                0, 0, 64, 64, WHITE
+            )
 
     def movement(self):
         self.rect.x = self.rect.x + int(self.dx) * 2.5
@@ -1659,6 +2110,8 @@ class Spawner:
             "Boss Mouse": [],
             "Desert Boarman": [],
             "Desert Wolf": [],
+            "Desert Wartotaur": [],
+            "Desert Boss": [],
         }
 
         self.list_of_dead_enemies = []
@@ -1705,7 +2158,7 @@ class Spawner:
                     ]
                 )
                 self.list_of_all_enemies[i].respawn_id = (
-                    "M",
+                    "m",
                     len(self.hashmap_of_enemies["Boss Mouse"]),
                 )
             elif self.list_of_all_enemies[i].name == "Desert Boarman":
@@ -1730,6 +2183,28 @@ class Spawner:
                     "w",
                     len(self.hashmap_of_enemies["Desert Wolf"]),
                 )
+            elif self.list_of_all_enemies[i].name == "Desert Wartotaur":
+                self.hashmap_of_enemies["Desert Wartotaur"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "W",
+                    len(self.hashmap_of_enemies["Desert Wartotaur"]),
+                )
+            elif self.list_of_all_enemies[i].name == "Desert Boss":
+                self.hashmap_of_enemies["Desert Boss"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "M",
+                    len(self.hashmap_of_enemies["Desert Boss"]),
+                )
 
     def add(self, respawn_id):
         self.list_of_dead_enemies.append(respawn_id)
@@ -1750,6 +2225,7 @@ class Spawner:
                             and self.list_of_dead_enemies[i][1]
                             == self.list_of_all_enemies[j].respawn_id[1]
                         ):
+
                             if self.list_of_dead_enemies[i][0] == "e":
 
                                 Enemy(
@@ -1835,7 +2311,7 @@ class Spawner:
                                     2.25,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
-                            elif self.list_of_dead_enemies[i][0] == "M":
+                            elif self.list_of_dead_enemies[i][0] == "m":
                                 Boss(
                                     self.game,
                                     self.hashmap_of_enemies["Boss Mouse"][
@@ -1866,9 +2342,23 @@ class Spawner:
                                 )
                             elif self.list_of_dead_enemies[i][0] == "b":
                                 Enemy(
-                                    self,
-                                    j,
-                                    i,
+                                    self.game,
+                                    self.hashmap_of_enemies["Desert Boarman"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Desert Boarman"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
                                     "images/enemies/level_2/desert_boarman.png",
                                     "images/enemies/level_2/desert_boarman_attack.png",
                                     "Desert Boarman",
@@ -1878,19 +2368,92 @@ class Spawner:
                                     2.25,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
-                        elif self.list_of_dead_enemies[i][0] == "w":
-                            Enemy(
-                                self,
-                                j,
-                                i,
-                                "images/enemies/level_2/desert_wolf.png",
-                                "images/enemies/level_2/desert_wolf_attack.png",
-                                30,
-                                250,
-                                100,
-                                2.75,
-                                respawn_id=self.list_of_dead_enemies[i],
-                            )
+                            elif self.list_of_dead_enemies[i][0] == "w":
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["Desert Wolf"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Desert Wolf"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_2/desert_wolf.png",
+                                    "images/enemies/level_2/desert_wolf_attack.png",
+                                    "Desert Wolf",
+                                    35,
+                                    250,
+                                    100,
+                                    2.75,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            elif self.list_of_dead_enemies[i][0] == "W":
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["Desert Wartotaur"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Desert Wartotaur"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_2/desert_wartotaur.png",
+                                    "images/enemies/level_2/desert_wartotaur_attack.png",
+                                    "Desert Wartotaur",
+                                    55,
+                                    500,
+                                    250,
+                                    2.5,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            elif self.list_of_dead_enemies[i][0] == "M":
+                                Boss(
+                                    self.game,
+                                    self.hashmap_of_enemies["Desert Boss"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Desert Boss"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_2/desert_minotaur_boss.png",
+                                    "images/enemies/level_2/skull.png",
+                                    "images/enemies/level_2/desert_minotaur_boss_attack.png",
+                                    "Desert Boss",
+                                    40,
+                                    2500,
+                                    1000,
+                                    3.0,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+
                 self.list_of_dead_enemies = []  # Reset the list
                 self.current = self.respawn_time  # Reset the timer
         else:

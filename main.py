@@ -66,7 +66,7 @@ class Game:
 
                 random_terrain = random.randint(0, 2)
                 if column == "B":
-                    Boundary_blocks(
+                    Block(
                         self,
                         j,
                         i,
@@ -209,7 +209,7 @@ class Game:
                             2.5,
                         )
 
-                    elif column == "W":
+                    elif column == "A":
                         Block(
                             self,
                             j,
@@ -247,7 +247,7 @@ class Game:
                             75,
                             2.25,
                         )
-                    if column == "w":
+                    elif column == "w":
                         Enemy(
                             self,
                             j,
@@ -255,12 +255,39 @@ class Game:
                             "images/enemies/level_2/desert_wolf.png",
                             "images/enemies/level_2/desert_wolf_attack.png",
                             "Desert Wolf",
-                            30,
+                            35,
                             250,
-                            100,
+                            125,
                             2.75,
                         )
-                    if column == "T":
+                    elif column == "W":
+                        Enemy(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_2/desert_wartotaur.png",
+                            "images/enemies/level_2/desert_wartotaur_attack.png",
+                            "Desert Wartotaur",
+                            55,
+                            500,
+                            250,
+                            2.5,
+                        )
+                    elif column == "M":
+                        Boss(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_2/desert_minotaur_boss.png",
+                            "images/enemies/level_2/skull.png",
+                            "images/enemies/level_2/desert_minotaur_boss_attack.png",
+                            "Desert Boss",
+                            40,
+                            2500,
+                            1000,
+                            3.0,
+                        )
+                    elif column == "T":
                         Ground(
                             self,
                             j,
@@ -272,7 +299,7 @@ class Game:
                                 (64, 64),
                             ),
                         )
-                        # 876
+
                     elif column == "r":
                         Ground(
                             self,
@@ -352,9 +379,48 @@ class Game:
                     )
 
                     # Enemies
+                    if column == "i":
+                        Enemy(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_3/burnt_imp.png",
+                            "images/enemies/level_3/burnt_imp_attack.png",
+                            "Burnt Imp",
+                            75,
+                            750,
+                            375,
+                            3.0,
+                        )
+                    elif column == "u":
+                        Enemy(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_3/burnt_succubus.png",
+                            "images/enemies/level_3/burnt_succubus_attack.png",
+                            "Burnt Succubus",
+                            100,
+                            1500,
+                            500,
+                            3.25,
+                        )
+                    elif column == "f":
+                        Enemy(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_3/burnt_fallen_angel.png",
+                            "images/enemies/level_3/burnt_fallen_angel.png",
+                            "Burnt Fallen Angel",
+                            150,
+                            3500,
+                            750,
+                            3.5,
+                        )
 
                     # Blocks and decorations
-                    if column == "H":
+                    elif column == "H":
 
                         Block(
                             self,
@@ -367,7 +433,7 @@ class Game:
                                 (64, 64),
                             ),
                         )
-                    elif column == "u":
+                    elif column == "L":
                         Block(
                             self,
                             j,
@@ -586,8 +652,11 @@ class Game:
                     self.player.level += 1
                     self.mana_bar.full += 10 * self.player.health_and_mana_level
                     self.mana_bar.regen += self.mana_bar.regen * 0.25
-                    self.health_bar.full += 10 * self.player.health_and_mana_level
-                    self.health_bar.regen += self.health_bar.regen * 0.5
+                    self.health_bar.full += (
+                        10 * self.player.health_and_mana_level
+                        + int(self.health_bar.full * 0.25)
+                    )
+                    self.health_bar.regen += self.health_bar.regen * 0.4
                     self.mana_bar.remaining = self.mana_bar.full
                     self.health_bar.remaining = self.health_bar.full
                     self.paused_game = 0
