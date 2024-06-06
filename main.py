@@ -16,10 +16,10 @@ flags = pygame.FULLSCREEN | pygame.DOUBLEBUF
 class Game:
     def __init__(self):
         pygame.init()
-
+        pygame.mixer.init()
+        self.music = Music()
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font("font/pixel_font.ttf", 50)
-
         self.window_open = 1
         self.active_game = 0
         self.paused_game = 0
@@ -28,6 +28,7 @@ class Game:
             Text("START", AZURE, 400, 100, self.font),
             Text("EXIT", DARK_GREY, 400, 200, self.font),
         ]
+
         pygame.mouse.set_visible(False)
         self.intro_screen()
         self.FPS = Show_FPS(
@@ -683,6 +684,8 @@ class Game:
                 self.buttons[1].color = DARK_GREY
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
+                    pygame.mixer.music.stop()
                     self.active_game = 1
 
             else:
@@ -692,7 +695,10 @@ class Game:
             if self.buttons[1].rect.collidepoint(pygame.mouse.get_pos()):
                 self.buttons[0].color = DARK_GREY
                 self.buttons[1].color = AZURE
+
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
+                    pygame.mixer.music.stop()
                     pygame.quit()
                     sys.exit()
 
@@ -856,6 +862,8 @@ class Game:
         self.cursor = Cursor(self)
         sky_x_position = 600
 
+        self.music.play_music("main_menu")
+        pygame.mixer.music.set_volume(0.25)  # 25% volume
         while not self.active_game:
 
             self.screen.fill(LIGHTBLUE)

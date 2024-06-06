@@ -90,7 +90,7 @@ class Player(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
         self.absolute_sprite_moved_value = (0, 0)
-
+        self.music = [0, 0, 0, 0]
         self.x_change = 0
         self.y_change = 0
 
@@ -225,10 +225,56 @@ class Player(pygame.sprite.Sprite):
             ),
         ]
 
+    def change_music(self):
+        if (
+            self.music[0] == 0
+            and self.absolute_sprite_moved_value[0] / 69268 // 16 > -80
+            and self.absolute_sprite_moved_value[1] / 69268 // 16 > -37
+        ):
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            self.game.music.play_music("level_1")
+            pygame.mixer.music.set_volume(0.08)
+            self.music[0], self.music[1], self.music[2], self.music[3] = 1, 0, 0, 0
+
+        elif (
+            self.music[1] == 0
+            and self.absolute_sprite_moved_value[0] / 69268 // 16 > -80
+            and self.absolute_sprite_moved_value[1] / 69268 // 16 < -36
+            and self.absolute_sprite_moved_value[1] / 69268 // 16 > -54
+        ):
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            self.game.music.play_music("level_2")
+            pygame.mixer.music.set_volume(0.08)
+            self.music[0], self.music[1], self.music[2], self.music[3] = 0, 1, 0, 0
+
+        elif (
+            self.music[2] == 0
+            and self.absolute_sprite_moved_value[0] / 69268 // 16 > -80
+            and self.absolute_sprite_moved_value[1] / 69268 // 16 < -54
+        ):
+
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            self.game.music.play_music("level_3")
+            pygame.mixer.music.set_volume(0.08)
+            self.music[0], self.music[1], self.music[2], self.music[3] = 0, 0, 1, 0
+        elif (
+            self.music[3] == 0
+            and self.absolute_sprite_moved_value[0] / 69268 // 16 < -80
+        ):
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            self.game.music.play_music("boss_room")
+            pygame.mixer.music.set_volume(0.08)
+            self.music[0], self.music[1], self.music[2], self.music[3] = 0, 0, 0, 1
+
     def update(self):
-        """ "
+        """
         Updates the player's position and sprite.
         """
+        self.change_music()
         keys = pygame.key.get_pressed()
         if keys:
             self.movement(keys)
@@ -252,10 +298,6 @@ class Player(pygame.sprite.Sprite):
         Returns:
             None
         """
-        print(
-            self.game.player.absolute_sprite_moved_value[0] / 69268 // 16,
-            self.game.player.absolute_sprite_moved_value[1] / 69268 // 16,
-        )
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             for sprite in self.game.all_sprites:
@@ -1310,6 +1352,7 @@ class Enemy(pygame.sprite.Sprite):
         speed,
         respawn_id=None,
     ):
+
         self.enemy_spritesheet_path = enemy_spritesheet_path
         self.enemy_attack_spritesheet_path = enemy_attack_spritesheet_path
         self.game = game
@@ -1668,6 +1711,7 @@ class Enemy(pygame.sprite.Sprite):
             and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
             and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 > -37
         ):
+
             self.cooldown()
             self.collide("x")
             self.movement()
@@ -1697,8 +1741,9 @@ class Enemy(pygame.sprite.Sprite):
         elif (
             self.name[:5] == "Burnt"
             and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
-            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -55
+            and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -54
         ):
+
             self.cooldown()
             self.collide("x")
             self.movement()
@@ -2246,6 +2291,27 @@ class Cursor:
         self.y = pygame.mouse.get_pos()[1]
 
 
+class Music:
+    def __init__(self):
+        self.music = {
+            "main_menu": "sounds/Music/main_menu_music.ogg",
+            "level_1": "sounds/Music/level1_music.wav",
+            "level_2": "sounds/Music/level2_music.mp3",
+            "level_3": "sounds/Music/level3_music.mp3",
+            "boss_room": "sounds/Music/boss_room_music.flac",
+        }
+        self.sound = {
+            "button_click": pygame.mixer.Sound("sounds/Sound/button_sound.flac"),
+        }
+
+    def play_music(self, name):
+        pygame.mixer.music.load(self.music[name])
+        pygame.mixer.music.play(-1)
+
+    def play_sound(self, name):
+        self.sound[name].play()
+
+
 class Spawner:
     def __init__(self, game):
 
@@ -2262,6 +2328,9 @@ class Spawner:
             "Desert Wolf": [],
             "Desert Wartotaur": [],
             "Desert Boss": [],
+            "Burnt Imp": [],
+            "Burnt Succubus": [],
+            "Burnt Fallen Angel": [],
         }
 
         self.list_of_dead_enemies = []
