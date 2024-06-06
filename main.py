@@ -222,7 +222,7 @@ class Game:
                             ),
                         )
 
-                elif i >= 48 and i < 71 and j < 100:
+                elif i >= 48 and i < 71 and j < 99:
                     Ground(
                         self,
                         j,
@@ -363,7 +363,7 @@ class Game:
                             ),
                         )
 
-                elif i >= 71 and j < 100:
+                elif i >= 71 and j < 99:
 
                     # Base
                     Ground(
@@ -402,7 +402,7 @@ class Game:
                             "Burnt Succubus",
                             100,
                             1500,
-                            500,
+                            750,
                             3.25,
                         )
                     elif column == "f":
@@ -411,11 +411,11 @@ class Game:
                             j,
                             i,
                             "images/enemies/level_3/burnt_fallen_angel.png",
-                            "images/enemies/level_3/burnt_fallen_angel.png",
+                            "images/enemies/level_3/burnt_fallen_angel_attack.png",
                             "Burnt Fallen Angel",
                             150,
                             3500,
-                            750,
+                            1500,
                             3.5,
                         )
 
@@ -507,7 +507,7 @@ class Game:
                                 (64, 64),
                             ),
                         )
-                if i > 45 and j > 99:
+                if i > 45 and j > 98:
 
                     Ground(
                         self,

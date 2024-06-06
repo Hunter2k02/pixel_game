@@ -252,6 +252,10 @@ class Player(pygame.sprite.Sprite):
         Returns:
             None
         """
+        print(
+            self.game.player.absolute_sprite_moved_value[0] / 69268 // 16,
+            self.game.player.absolute_sprite_moved_value[1] / 69268 // 16,
+        )
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             for sprite in self.game.all_sprites:
@@ -947,7 +951,7 @@ class Ultimate_attack(Attack):
                 384, 384, self.width, self.height, BLACK
             ),
         ] * (self.game.player.speed_level + 1)
-
+        # Upgrade the ultimate attack based on the player's ultimate attack level
         self.upgrade_attack_tier(self.game.player.ultimate_attack_level // 3)
         self.image = self.animations[0]
         self.damage = (
@@ -970,7 +974,7 @@ class Ultimate_attack(Attack):
             self.width *= 2
 
         elif tier == 2:
-
+            # Upgrade the ultimate attack to tier 2
             self.game.ultimate_attack_spritesheet = Spritesheet(
                 "images/missles/lightningclaw.png"
             )
@@ -1025,6 +1029,7 @@ class Ultimate_attack(Attack):
                     384, 384, self.width, self.height, BLACK
                 ),
             ] * (self.game.player.speed_level + 1)
+            # Scale the ultimate attack to a larger size
             for i in range(len(self.animations)):
                 self.animations[i] = pygame.transform.scale(
                     self.animations[i], (256, 256)
@@ -1141,9 +1146,9 @@ class Enemy_attack(pygame.sprite.Sprite):
         self.height = TILESIZE
 
         self.animation_loop = 0
-        self.direction = random.choice(["left", "right", "down", "up"])
+        self.direction = self.enemy.facing
         self.damage = self.enemy.damage
-
+        # Calculate the angle between the player and the enemy
         self.angle = math.atan2(
             self.game.player.rect.y - self.y, self.game.player.rect.x - self.x
         )
@@ -1225,6 +1230,29 @@ class Enemy_attack(pygame.sprite.Sprite):
                 self.enemy.enemy_attack_spritesheet.get_sprite(0, 128, 64, 64, WHITE),
                 self.enemy.enemy_attack_spritesheet.get_sprite(0, 192, 64, 64, WHITE),
             ] * 20
+        elif name == "Burnt Imp":
+            self.image = self.spritesheet.get_sprite(0, 0, 95, 19, WHITE)
+            self.image = pygame.transform.scale(self.image, (96, 16))
+            self.image = pygame.transform.rotate(
+                self.image, 180 - math.degrees(self.angle)
+            )
+            self.animations = [self.image] * 30
+        elif name == "Burnt Succubus":
+            self.image = self.spritesheet.get_sprite(0, 0, 93, 13, WHITE)
+            self.image = pygame.transform.scale(self.image, (96, 16))
+            self.image = pygame.transform.rotate(
+                self.image, 180 - math.degrees(self.angle)
+            )
+            self.animations = [self.image] * 30
+        elif name == "Burnt Fallen Angel":
+            self.image = self.spritesheet.get_sprite(0, 11, 11, 11, WHITE)
+            self.animations = [
+                self.spritesheet.get_sprite(0, 11, 11, 11, WHITE),
+                self.spritesheet.get_sprite(16, 7, 18, 18, WHITE),
+                self.spritesheet.get_sprite(46, 4, 22, 22, WHITE),
+                self.spritesheet.get_sprite(76, 1, 28, 28, WHITE),
+                self.spritesheet.get_sprite(106, 0, 31, 31, WHITE),
+            ] * 6
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
@@ -1251,6 +1279,23 @@ class Enemy_attack(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
+    """
+    Represents an enemy entity in the game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the enemy's position.
+        y (int): The y-coordinate of the enemy's position.
+        enemy_spritesheet_path (str): The file path to the enemy's spritesheet.
+        enemy_attack_spritesheet_path (str): The file path to the enemy's attack spritesheet.
+        name (str): The name of the enemy.
+        damage (int): The amount of damage the enemy can inflict.
+        health (int): The current health of the enemy.
+        exp (int): The amount of experience points the enemy gives when defeated.
+        speed (int): The movement speed of the enemy.
+        respawn_id (Optional[int]): The ID of the enemy's respawn point (if applicable).
+    """
+
     def __init__(
         self,
         game,
@@ -1344,6 +1389,7 @@ class Enemy(pygame.sprite.Sprite):
         self.attack = self.enemy_attack_spritesheet.get_sprite(0, 0, 64, 32, BLACK)
 
     def personalize(self, name):
+        # Personalize the enemy based on its name
         if name == "Grey Mouse":
             self.max_cooldown_count = 175
         elif name == "Brown Mouse":
@@ -1354,6 +1400,9 @@ class Enemy(pygame.sprite.Sprite):
             self.max_cooldown_count = 80
         elif name == "Desert Wolf":
             self.max_cooldown_count = 60
+            self.image = self.enemy_spritesheet.get_sprite(
+                0, 0, self.width * 2, self.height, WHITE
+            )
 
             self.up_animations = [
                 self.enemy_spritesheet.get_sprite(
@@ -1476,57 +1525,15 @@ class Enemy(pygame.sprite.Sprite):
             ]
         elif name == "Desert Wartotaur":
             self.max_cooldown_count = 80
-        elif name == "Burnt Imp":
+        elif (
+            name == "Burnt Imp"
+            or name == "Burnt Succubus"
+            or name == "Burnt Fallen Angel"
+        ):
             self.max_cooldown_count = 60
-            self.up_animations = [
-                self.enemy_spritesheet.get_sprite(0, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(128, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(256, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(384, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(512, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(640, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(768, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(896, 0, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(1024, 0, 130, 73, WHITE),
-            ]
-
-            self.down_animations = [
-                self.enemy_spritesheet.get_sprite(0, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(128, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(256, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(384, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(512, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(640, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(768, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(896, 73, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(1024, 73, 130, 73, WHITE),
-            ]
-
-            self.right_animations = [
-                self.enemy_spritesheet.get_sprite(0, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(128, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(256, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(384, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(512, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(640, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(768, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(896, 223, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(1024, 223, 130, 73, WHITE),
-            ]
-
-            self.left_animations = [
-                self.enemy_spritesheet.get_sprite(0, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(128, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(256, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(384, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(512, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(640, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(768, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(896, 64, 130, 73, WHITE),
-                self.enemy_spritesheet.get_sprite(1024, 64, 130, 73, WHITE),
-            ]
-        elif name == "Burnt Succubus":
-            self.max_cooldown_count = 60
+            self.image = self.enemy_spritesheet.get_sprite(
+                0, 0, self.width * 2, self.height, WHITE
+            )
             self.up_animations = [
                 self.enemy_spritesheet.get_sprite(
                     0, 0, self.width * 2, self.height, WHITE
@@ -1559,61 +1566,61 @@ class Enemy(pygame.sprite.Sprite):
 
             self.down_animations = [
                 self.enemy_spritesheet.get_sprite(
-                    0, 140, self.width * 2, self.height, WHITE
+                    0, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    128, 140, self.width * 2, self.height, WHITE
+                    128, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    256, 140, self.width * 2, self.height, WHITE
+                    256, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    384, 140, self.width * 2, self.height, WHITE
+                    384, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    512, 140, self.width * 2, self.height, WHITE
+                    512, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    640, 140, self.width * 2, self.height, WHITE
+                    640, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    768, 140, self.width * 2, self.height, WHITE
+                    768, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    896, 140, self.width * 2, self.height, WHITE
+                    896, 128, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    1024, 140, self.width * 2, self.height, WHITE
+                    1024, 128, self.width * 2, self.height, WHITE
                 ),
             ]
 
             self.right_animations = [
                 self.enemy_spritesheet.get_sprite(
-                    0, 223, self.width * 2, self.height, WHITE
+                    0, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    128, 223, self.width * 2, self.height, WHITE
+                    128, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    256, 223, self.width * 2, self.height, WHITE
+                    256, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    384, 223, self.width * 2, self.height, WHITE
+                    384, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    512, 223, self.width * 2, self.height, WHITE
+                    512, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    640, 223, self.width * 2, self.height, WHITE
+                    640, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    768, 223, self.width * 2, self.height, WHITE
+                    768, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    896, 223, self.width * 2, self.height, WHITE
+                    896, 192, self.width * 2, self.height, WHITE
                 ),
                 self.enemy_spritesheet.get_sprite(
-                    1024, 223, self.width * 2, self.height, WHITE
+                    1024, 192, self.width * 2, self.height, WHITE
                 ),
             ]
 
@@ -1646,10 +1653,16 @@ class Enemy(pygame.sprite.Sprite):
                     1024, 64, self.width * 2, self.height, WHITE
                 ),
             ]
+
         elif name == "Burnt Fallen Angel":
             self.max_cooldown_count = 25
 
     def update(self):
+        # Update the enemy's position, animation, and attack cooldown
+        # based on the player's position
+        # and the enemy's name
+        # If the enemy is a Mouse... and the player is in the first area
+
         if (
             self.name[-5:] == "Mouse"
             and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
@@ -1664,7 +1677,7 @@ class Enemy(pygame.sprite.Sprite):
             self.check_health()
             if self.shoot_cooldown_count == 0:
                 self.attack_player()
-
+        # If the enemy is a Desert... and the player is in the second area
         elif (
             self.name[:6] == "Desert"
             and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
@@ -1680,9 +1693,10 @@ class Enemy(pygame.sprite.Sprite):
             self.check_health()
             if self.shoot_cooldown_count == 0:
                 self.attack_player()
+        # If the enemy is a Burnt... and the player is in the third area
         elif (
             self.name[:5] == "Burnt"
-            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 < -80
+            and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 > -80
             and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -55
         ):
             self.cooldown()
@@ -1714,6 +1728,7 @@ class Enemy(pygame.sprite.Sprite):
                         self.rect.y = hits[0].rect.top - self.rect.height
 
     def attack_player(self):
+        # Attack the player if the enemy is within range
         if self.dist < 600:
             self.shoot_cooldown_count += 1
             if self.facing == "up":
@@ -1792,6 +1807,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.image = self.left_animations[0]
 
     def check_health(self):
+        # Check if the enemy's health is less than or equal to 0
+        # and shows the experience gained
         if self.health <= 0:
             self.kill()
             self.game.experience_bar.get(self.experience)
@@ -1904,15 +1921,148 @@ class Boss(Enemy):
 
     def ultimate_attack_player(self):
         self.ultimate_cooldown_count += 1
-        if self.dist < 600:
+        if self.dist < 850:
             Boss_attack(self.game, self.rect.x, self.rect.y, self)
 
     def personalize(self, name):
         if name == "Boss Mouse":
             self.max_cooldown_count = 50
+
         elif name == "Desert Boss":
             self.max_cooldown_count = 25
             self.ultimate_cooldown_max = 200
+
+            self.up_animations = [
+                self.enemy_spritesheet.get_sprite(0, 0, self.width, self.height, WHITE),
+                self.enemy_spritesheet.get_sprite(
+                    64, 0, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 0, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    192, 0, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 0, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    320, 0, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 0, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    448, 0, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 0, self.width, self.height, WHITE
+                ),
+            ]
+
+            self.down_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    64, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    192, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    320, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    448, 128, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 128, self.width, self.height, WHITE
+                ),
+            ]
+
+            self.right_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    64, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    192, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    320, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    448, 192, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 192, self.width, self.height, WHITE
+                ),
+            ]
+
+            self.left_animations = [
+                self.enemy_spritesheet.get_sprite(
+                    0, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    64, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    128, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    192, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    256, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    320, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    384, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    448, 64, self.width, self.height, WHITE
+                ),
+                self.enemy_spritesheet.get_sprite(
+                    512, 64, self.width, self.height, WHITE
+                ),
+            ]
+
+            for i in range(9):
+                self.left_animations[i] = pygame.transform.scale(
+                    self.left_animations[i], (128, 128)
+                )
+                self.right_animations[i] = pygame.transform.scale(
+                    self.right_animations[i], (128, 128)
+                )
+                self.up_animations[i] = pygame.transform.scale(
+                    self.up_animations[i], (128, 128)
+                )
+                self.down_animations[i] = pygame.transform.scale(
+                    self.down_animations[i], (128, 128)
+                )
 
     def cooldown_ultimate(self):
 
@@ -2205,6 +2355,39 @@ class Spawner:
                     "M",
                     len(self.hashmap_of_enemies["Desert Boss"]),
                 )
+            elif self.list_of_all_enemies[i].name == "Burnt Imp":
+                self.hashmap_of_enemies["Burnt Imp"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "i",
+                    len(self.hashmap_of_enemies["Burnt Imp"]),
+                )
+            elif self.list_of_all_enemies[i].name == "Burnt Succubus":
+                self.hashmap_of_enemies["Burnt Succubus"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "u",
+                    len(self.hashmap_of_enemies["Burnt Succubus"]),
+                )
+            elif self.list_of_all_enemies[i].name == "Burnt Fallen Angel":
+                self.hashmap_of_enemies["Burnt Fallen Angel"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "f",
+                    len(self.hashmap_of_enemies["Burnt Fallen Angel"]),
+                )
 
     def add(self, respawn_id):
         self.list_of_dead_enemies.append(respawn_id)
@@ -2451,6 +2634,90 @@ class Spawner:
                                     2500,
                                     1000,
                                     3.0,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            elif self.list_of_dead_enemies[i][0] == "i":
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["Burnt Imp"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Burnt Imp"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_3/burnt_imp.png",
+                                    "images/enemies/level_3/burnt_imp_attack.png",
+                                    "Burnt Imp",
+                                    75,
+                                    750,
+                                    375,
+                                    3.0,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            elif self.list_of_dead_enemies[i][0] == "u":
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["Burnt Succubus"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Burnt Succubus"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_3/burnt_succubus.png",
+                                    "images/enemies/level_3/burnt_succubus_attack.png",
+                                    "Burnt Succubus",
+                                    100,
+                                    1500,
+                                    750,
+                                    3.25,
+                                    respawn_id=self.list_of_dead_enemies[i],
+                                )
+                            elif self.list_of_dead_enemies[i][0] == "f":
+                                Enemy(
+                                    self.game,
+                                    self.hashmap_of_enemies["Burnt Fallen Angel"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][0]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[0]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    self.hashmap_of_enemies["Burnt Fallen Angel"][
+                                        self.list_of_all_enemies[j].respawn_id[1] - 1
+                                    ][1]
+                                    + (
+                                        self.game.player.absolute_sprite_moved_value[1]
+                                        / 69268
+                                        // 16
+                                    ),
+                                    "images/enemies/level_3/burnt_fallen_angel.png",
+                                    "images/enemies/level_3/burnt_fallen_angel_attack.png",
+                                    "Burnt Fallen Angel",
+                                    150,
+                                    3500,
+                                    1500,
+                                    3.5,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
 
