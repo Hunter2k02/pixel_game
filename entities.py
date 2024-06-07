@@ -753,6 +753,21 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
+            for sprite in hits:
+                if sprite.name[-5:] == "Mouse":
+                    self.game.music.play_sound("mouse_sound")
+                elif sprite.name[:6] == "Desert":
+                    if sprite.name[-4:] != "Boss":
+                        self.game.music.play_sound("desert_sound")
+                    else:
+                        self.game.music.play_sound("desert_boss_sound")
+                elif sprite.name[:5] == "Burnt":
+                    if sprite.name[-8:] == "Succubus":
+                        self.game.music.play_sound("succubus_sound")
+                    elif sprite.name[-5:] == "Angel":
+                        self.game.music.play_sound("fallen_angel_sound")
+                    else:
+                        self.game.music.play_sound("burnt_sound")
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
@@ -1161,6 +1176,21 @@ class Ultimate_attack(Attack):
                         "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                     ),
                 )
+            for sprite in hits:
+                if sprite.name[-5:] == "Mouse":
+                    self.game.music.play_sound("mouse_sound")
+                elif sprite.name[:6] == "Desert":
+                    if sprite.name[-4:] != "Boss":
+                        self.game.music.play_sound("desert_sound")
+                    else:
+                        self.game.music.play_sound("desert_boss_sound")
+                elif sprite.name[:5] == "Burnt":
+                    if sprite.name[-8:] == "Succubus":
+                        self.game.music.play_sound("succubus_sound")
+                    elif sprite.name[-5:] == "Angel":
+                        self.game.music.play_sound("fallen_angel_sound")
+                    else:
+                        self.game.music.play_sound("burnt_sound")
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
@@ -1301,6 +1331,7 @@ class Enemy_attack(pygame.sprite.Sprite):
         if hits:
             for sprite in hits:
                 if sprite.__class__.__name__ == "Player":
+                    self.game.music.play_sound("player_hurt")
                     self.game.health_bar.lose(self.damage)
                     self.kill()
 
@@ -2208,6 +2239,9 @@ class Health_bar(Bar):
         if self.remaining <= 0:
             self.remaining = 0
             self.game.player.kill()
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            self.game.music.play_sound("player_death")
             self.game.active_game = 0
 
 
@@ -2302,6 +2336,21 @@ class Music:
         }
         self.sound = {
             "button_click": pygame.mixer.Sound("sounds/Sound/button_sound.flac"),
+            "level_up": pygame.mixer.Sound("sounds/Sound/level_up_sound.mp3"),
+            "mouse_sound": pygame.mixer.Sound("sounds/Sound/mouse_sound.mp3"),
+            "desert_sound": pygame.mixer.Sound("sounds/Sound/desert_sound.mp3"),
+            "desert_boss_sound": pygame.mixer.Sound(
+                "sounds/Sound/desert_boss_sound.mp3"
+            ),
+            "burnt_sound": pygame.mixer.Sound("sounds/Sound/burnt_sound.mp3"),
+            "succubus_sound": pygame.mixer.Sound("sounds/Sound/succubus_sound.mp3"),
+            "fallen_angel_sound": pygame.mixer.Sound(
+                "sounds/Sound/fallen_angel_sound.mp3"
+            ),
+            "player_hurt": pygame.mixer.Sound("sounds/Sound/player_hurt_sound.mp3"),
+            "player_death": pygame.mixer.Sound("sounds/Sound/player_death_sound.mp3"),
+            "dragon_sound": pygame.mixer.Sound("sounds/Sound/dragon_sound.mp3"),
+            "game_over": pygame.mixer.Sound("sounds/Sound/game_over_sound.mp3"),
         }
 
     def play_music(self, name):
@@ -2310,6 +2359,26 @@ class Music:
 
     def play_sound(self, name):
         self.sound[name].play()
+        if name == "level_up":
+            self.sound[name].set_volume(0.25)
+        elif name == "player_hurt":
+            self.sound[name].set_volume(0.08)
+        elif name == "player_death":
+            self.sound[name].set_volume(0.5)
+        elif name == "game_over":
+            self.sound[name].set_volume(0.4)
+        elif name == "mouse_sound":
+            self.sound[name].set_volume(0.15)
+        elif name == "desert_sound":
+            self.sound[name].set_volume(0.15)
+        elif name == "desert_boss_sound":
+            self.sound[name].set_volume(0.25)
+        elif name == "burnt_sound":
+            self.sound[name].set_volume(0.15)
+        elif name == "succubus_sound":
+            self.sound[name].set_volume(0.1)
+        elif name == "fallen_angel_sound":
+            self.sound[name].set_volume(0.4)
 
 
 class Spawner:

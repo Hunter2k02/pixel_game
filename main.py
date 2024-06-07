@@ -569,6 +569,7 @@ class Game:
             if self.options[0].rect.collidepoint(pygame.mouse.get_pos()):
                 self.options[0].color = "red"
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
                     game_ended = 0
                     self.window_open = 0
                     break
@@ -579,6 +580,7 @@ class Game:
             if self.options[1].rect.collidepoint(pygame.mouse.get_pos()):
                 self.options[1].color = "red"
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
                     game_ended = 1
                     self.window_open = 0
 
@@ -596,6 +598,7 @@ class Game:
             ):
                 self.options[4].color = AZURE
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
                     self.player.basic_attack_level += 1
                     self.player.level += 1
                     self.health_bar.remaining = self.health_bar.full
@@ -612,6 +615,7 @@ class Game:
                 self.options[5].color = AZURE
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
                     self.player.ultimate_attack_level += 1
                     self.player.level += 1
                     self.mana_cost = int(self.mana_cost * 1.25)
@@ -629,6 +633,7 @@ class Game:
                 self.options[6].color = AZURE
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
                     self.player.speed_level += 1
                     self.player.level += 1
                     self.player.player_speed = (
@@ -649,6 +654,7 @@ class Game:
                 self.options[7].color = AZURE
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
                     self.player.health_and_mana_level += 1
                     self.player.level += 1
                     self.mana_bar.full += 10 * self.player.health_and_mana_level
@@ -762,10 +768,7 @@ class Game:
                         Ultimate_attack(
                             self, self.player.rect.x + TILESIZE, self.player.rect.y
                         )
-            if (
-                event.type == pygame.MOUSEBUTTONDOWN
-                and self.mana_bar.remaining >= self.mana_cost
-            ):
+            if event.type == pygame.MOUSEBUTTONDOWNa:
                 if event.button == 2:
                     self.experience_bar.get(10000)
 
@@ -842,6 +845,8 @@ class Game:
                 pygame.font.Font("font/pixel_font.ttf", 170),
             ),
         ]
+        pygame.time.wait(1000)
+        self.music.play_sound("game_over")
         while self.window_open:
             self.screen.fill(BLACK)
             for sprite in self.options:
@@ -882,6 +887,9 @@ class Game:
 
     def pause_screen(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+
+        self.music.play_sound("level_up")
+
         self.options = [
             Skill_up_bar(
                 self,
@@ -1023,4 +1031,3 @@ if __name__ == "__main__":
         game.new()
         while game.window_open:
             game.main()
-            game.game_over()
