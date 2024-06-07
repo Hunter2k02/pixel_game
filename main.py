@@ -545,6 +545,21 @@ class Game:
                                 (64, 64),
                             ),
                         )
+                    # Final Boss
+                    elif column == "E":
+                        Last_boss(
+                            self,
+                            j,
+                            i,
+                            "images/enemies/level_4/dragon.png",
+                            "images/enemies/level_4/dragon_basic.png",
+                            "images/enemies/level_4/dragon_ultimate.png",
+                            "Dragon",
+                            300,
+                            9999,
+                            9999,
+                            6,
+                        )
 
         self.player = Player(self, WIDTH // 128, HEIGHT // 128)
         self.spawner = Spawner(self)
@@ -768,7 +783,7 @@ class Game:
                         Ultimate_attack(
                             self, self.player.rect.x + TILESIZE, self.player.rect.y
                         )
-            if event.type == pygame.MOUSEBUTTONDOWNa:
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 2:
                     self.experience_bar.get(10000)
 

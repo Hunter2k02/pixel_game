@@ -768,6 +768,8 @@ class Attack(pygame.sprite.Sprite):
                         self.game.music.play_sound("fallen_angel_sound")
                     else:
                         self.game.music.play_sound("burnt_sound")
+                elif sprite.name == "Dragon":
+                    self.game.music.play_sound("dragon_sound")
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
@@ -1191,6 +1193,8 @@ class Ultimate_attack(Attack):
                         self.game.music.play_sound("fallen_angel_sound")
                     else:
                         self.game.music.play_sound("burnt_sound")
+                elif sprite.name == "Dragon":
+                    self.game.music.play_sound("dragon_sound")
 
     def animate(self):
         self.image = self.animations[math.floor(self.animation_loop)]
@@ -1325,6 +1329,20 @@ class Enemy_attack(pygame.sprite.Sprite):
                 self.spritesheet.get_sprite(76, 1, 28, 28, WHITE),
                 self.spritesheet.get_sprite(106, 0, 31, 31, WHITE),
             ] * 6
+        elif name == "Dragon":
+            self.image = self.spritesheet.get_sprite(0, 0, 17, 10, WHITE)
+            self.animations = [
+                self.spritesheet.get_sprite(0, 0, 17, 10, WHITE),
+                self.spritesheet.get_sprite(18, 0, 18, 10, WHITE),
+                self.spritesheet.get_sprite(16, 0, 16, 10, WHITE),
+            ] * 10
+            for i in range(len(self.animations)):
+                self.animations[i] = pygame.transform.scale(
+                    self.animations[i], (64, 32)
+                )
+                self.animations[i] = pygame.transform.rotate(
+                    self.animations[i], 180 - math.degrees(self.angle)
+                )
 
     def collide(self):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
@@ -1405,7 +1423,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
         self.respawn_id = respawn_id
-
+        self.animate_speed = 0.15
         self.speed = speed
         self.name = name
         self.damage = damage
@@ -1848,29 +1866,29 @@ class Enemy(pygame.sprite.Sprite):
             if self.facing == "down":
 
                 self.image = self.down_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.15
-                if self.animation_loop >= 9:
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.down_animations):
                     self.animation_loop = 1
 
             if self.facing == "up":
 
                 self.image = self.up_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.15
-                if self.animation_loop >= 9:
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.up_animations):
                     self.animation_loop = 1
 
             if self.facing == "left":
 
                 self.image = self.left_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.15
-                if self.animation_loop >= 9:
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.left_animations):
                     self.animation_loop = 1
 
             if self.facing == "right":
 
                 self.image = self.right_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.15
-                if self.animation_loop >= 9:
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.right_animations):
                     self.animation_loop = 1
         else:
             if self.facing == "up":
@@ -1982,6 +2000,19 @@ class Boss(Enemy):
             and self.game.player.absolute_sprite_moved_value[0] / 69268 // 16 < -80
             and self.game.player.absolute_sprite_moved_value[1] / 69268 // 16 < -55
         ):
+            self.cooldown()
+            self.cooldown_ultimate()
+            self.collide("x")
+            self.movement()
+            self.collide("y")
+            self.animate()
+
+            self.check_health()
+            if self.shoot_cooldown_count == 0:
+                self.attack_player()
+            if self.ultimate_cooldown_count == 0:
+                self.ultimate_attack_player()
+        elif self.name == "Dragon":
             self.cooldown()
             self.cooldown_ultimate()
             self.collide("x")
@@ -2139,6 +2170,43 @@ class Boss(Enemy):
                 self.down_animations[i] = pygame.transform.scale(
                     self.down_animations[i], (128, 128)
                 )
+        elif name == "Dragon":
+            self.max_cooldown_count = 40
+            self.ultimate_cooldown_max = 350
+            self.animate_speed = 0.05
+            self.up_animations = [
+                self.enemy_spritesheet.get_sprite(0, 0, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(144, 0, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(288, 0, 144, 128, BLACK),
+            ]
+            self.right_animations = [
+                self.enemy_spritesheet.get_sprite(0, 128, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(144, 128, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(288, 128, 144, 128, BLACK),
+            ]
+            self.down_animations = [
+                self.enemy_spritesheet.get_sprite(0, 256, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(144, 256, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(288, 256, 144, 128, BLACK),
+            ]
+            self.left_animations = [
+                self.enemy_spritesheet.get_sprite(0, 384, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(144, 384, 144, 128, BLACK),
+                self.enemy_spritesheet.get_sprite(288, 384, 144, 128, BLACK),
+            ]
+            for i in range(3):
+                self.left_animations[i] = pygame.transform.scale(
+                    self.left_animations[i], (288, 256)
+                )
+                self.right_animations[i] = pygame.transform.scale(
+                    self.right_animations[i], (288, 256)
+                )
+                self.up_animations[i] = pygame.transform.scale(
+                    self.up_animations[i], (288, 256)
+                )
+                self.down_animations[i] = pygame.transform.scale(
+                    self.down_animations[i], (288, 256)
+                )
 
     def cooldown_ultimate(self):
 
@@ -2178,10 +2246,139 @@ class Boss_attack(Enemy_attack):
             self.image = self.enemy.boss_attack_spritesheet.get_sprite(
                 0, 0, 64, 64, WHITE
             )
+        elif name == "Dragon":
+            self.image = self.enemy.boss_attack_spritesheet.get_sprite(
+                0, 0, 32, 32, BLACK
+            )
+            self.animations = [
+                self.enemy.boss_attack_spritesheet.get_sprite(0, 0, 32, 32, BLACK),
+                self.enemy.boss_attack_spritesheet.get_sprite(32, 0, 32, 32, BLACK),
+                self.enemy.boss_attack_spritesheet.get_sprite(64, 0, 32, 32, BLACK),
+                self.enemy.boss_attack_spritesheet.get_sprite(96, 0, 32, 32, BLACK),
+            ] * 5
+            self.damage = self.enemy.damage * 10
+            for i in range(len(self.animations)):
+                self.animations[i] = pygame.transform.rotate(
+                    self.animations[i], 90 - math.degrees(self.angle)
+                )
+                self.animations[i] = pygame.transform.scale(
+                    self.animations[i], (128, 128)
+                )
 
     def movement(self):
         self.rect.x = self.rect.x + int(self.dx) * 2.5
         self.rect.y = self.rect.y + int(self.dy) * 2.5
+
+
+class Last_boss(Boss):
+    def __init__(
+        self,
+        game,
+        x,
+        y,
+        enemy_spritesheet_path,
+        enemy_attack_spritesheet_path,
+        boss_attack_spritesheet_path,
+        name,
+        damage,
+        health,
+        exp,
+        speed,
+        respawn_id=None,
+    ):
+        super().__init__(
+            game,
+            x,
+            y,
+            enemy_spritesheet_path,
+            enemy_attack_spritesheet_path,
+            boss_attack_spritesheet_path,
+            name,
+            damage,
+            health,
+            exp,
+            speed,
+            respawn_id,
+        )
+
+    def attack_player(self):
+
+        if self.dist < 1200:
+            self.shoot_cooldown_count += 1
+            if self.facing == "up":
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
+            if self.facing == "down":
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
+            if self.facing == "left":
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
+            if self.facing == "right":
+                Enemy_attack(self.game, self.rect.x, self.rect.y, self)
+
+    def movement(self):
+        self.dist = math.hypot(
+            self.game.player.rect.x - self.rect.x,
+            self.game.player.rect.y - self.rect.y,
+        )
+
+        if self.dist < 1200:
+            if self.game.player.rect.x > self.rect.x:
+
+                self.rect.x += self.speed
+                self.facing = "right"
+
+            elif self.game.player.rect.x < self.rect.x:
+
+                self.rect.x -= self.speed
+                self.facing = "left"
+
+            elif self.game.player.rect.y > self.rect.y:
+
+                self.rect.y += self.speed
+                self.facing = "down"
+
+            elif self.game.player.rect.y < self.rect.y:
+
+                self.rect.y -= self.speed
+                self.facing = "up"
+
+    def animate(self):
+        if self.dist < 1200:
+            if self.facing == "down":
+
+                self.image = self.down_animations[math.floor(self.animation_loop)]
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.down_animations):
+                    self.animation_loop = 1
+
+            if self.facing == "up":
+
+                self.image = self.up_animations[math.floor(self.animation_loop)]
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.up_animations):
+                    self.animation_loop = 1
+
+            if self.facing == "left":
+
+                self.image = self.left_animations[math.floor(self.animation_loop)]
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.left_animations):
+                    self.animation_loop = 1
+
+            if self.facing == "right":
+
+                self.image = self.right_animations[math.floor(self.animation_loop)]
+                self.animation_loop += self.animate_speed
+                if self.animation_loop >= len(self.right_animations):
+                    self.animation_loop = 1
+        else:
+            if self.facing == "up":
+                self.image = self.up_animations[0]
+            elif self.facing == "down":
+                self.image = self.down_animations[0]
+            elif self.facing == "right":
+                self.image = self.right_animations[0]
+            else:
+                self.image = self.left_animations[0]
 
 
 class Bar(pygame.sprite.Sprite):
@@ -2379,6 +2576,8 @@ class Music:
             self.sound[name].set_volume(0.1)
         elif name == "fallen_angel_sound":
             self.sound[name].set_volume(0.4)
+        elif name == "dragon_sound":
+            self.sound[name].set_volume(0.2)
 
 
 class Spawner:
@@ -2400,6 +2599,7 @@ class Spawner:
             "Burnt Imp": [],
             "Burnt Succubus": [],
             "Burnt Fallen Angel": [],
+            "Dragon": [],
         }
 
         self.list_of_dead_enemies = []
@@ -2525,6 +2725,17 @@ class Spawner:
                 self.list_of_all_enemies[i].respawn_id = (
                     "f",
                     len(self.hashmap_of_enemies["Burnt Fallen Angel"]),
+                )
+            elif self.list_of_all_enemies[i].name == "Dragon":
+                self.hashmap_of_enemies["Dragon"].append(
+                    [
+                        self.list_of_all_enemies[i].rect.x // 64,
+                        self.list_of_all_enemies[i].rect.y // 64,
+                    ]
+                )
+                self.list_of_all_enemies[i].respawn_id = (
+                    "d",
+                    len(self.hashmap_of_enemies["Dragon"]),
                 )
 
     def add(self, respawn_id):
