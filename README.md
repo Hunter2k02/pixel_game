@@ -4,7 +4,7 @@
 
 ## Description
 
-A brief description of your project goes here.
+This action-adventure game developed as a university project. Set in a vibrant pixelated world, players navigate through challenging levels and battle enemies. 
 
 ## Table of Contents
 
