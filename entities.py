@@ -1916,6 +1916,10 @@ class Enemy(pygame.sprite.Sprite):
             )
 
             self.game.spawner.add(self.respawn_id)
+            if self.name == "Dragon":
+                self.game.active_game = 0
+                self.game.win = 1
+                self.game.end_screen()
 
     def cooldown(self):
         if self.shoot_cooldown_count >= self.max_cooldown_count:
@@ -2530,6 +2534,7 @@ class Music:
             "level_2": "sounds/Music/level2_music.mp3",
             "level_3": "sounds/Music/level3_music.mp3",
             "boss_room": "sounds/Music/boss_room_music.flac",
+            "victory" : "sounds/Music/victory_music.mp3",
         }
         self.sound = {
             "button_click": pygame.mixer.Sound("sounds/Sound/button_sound.flac"),

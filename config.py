@@ -3,6 +3,10 @@ import pygame
 pygame.init()
 # Colors
 LIGHTBLUE = (72, 128, 247)
+LIGHTBLUE2 = (102, 175, 194)
+YELLOW = (255, 255, 161)
+FIRE = (255, 160, 0)
+GOLD = (225, 194, 79)
 AZURE = (240, 255, 255)
 DARK_GREY = (169, 169, 169)
 BLACK = (0, 0, 0)

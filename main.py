@@ -20,6 +20,7 @@ class Game:
         self.music = Music()
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font("font/pixel_font.ttf", 50)
+        self.win = 0
         self.window_open = 1
         self.active_game = 0
         self.paused_game = 0
@@ -787,6 +788,24 @@ class Game:
                 if event.button == 2:
                     self.experience_bar.get(10000)
 
+    def events_end_screen(self):
+        pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN])
+        global game_ended
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            if self.options[0].rect.collidepoint(pygame.mouse.get_pos()):
+                self.options[0].color = GOLD
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.music.play_sound("button_click")
+                    game_ended = 0
+                    self.window_open = 0
+                    break
+
+            else:
+                self.options[0].color = FIRE
+
     def cooldown(self):
         if self.shoot_cooldown_count >= self.max_cooldown:
             self.shoot_cooldown_count = 0
@@ -832,8 +851,10 @@ class Game:
             self.events_in_game()
             self.update()
             self.draw()
-
-        self.game_over()
+        if self.win:
+            self.end_screen()
+        else:
+            self.game_over()
 
     def game_over(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
@@ -860,10 +881,12 @@ class Game:
                 pygame.font.Font("font/pixel_font.ttf", 170),
             ),
         ]
+
         pygame.time.wait(1000)
         self.music.play_sound("game_over")
         while self.window_open:
             self.screen.fill(BLACK)
+
             for sprite in self.options:
                 sprite.draw(self.screen)
             self.cursor.draw(self.screen)
@@ -1037,6 +1060,44 @@ class Game:
         for sprite in self.options:
             sprite.kill()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+
+    def end_screen(self):
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        self.options = [
+            Text(
+                "ADVENTURE AGAIN?",
+                FIRE,
+                WIDTH // 2,
+                HEIGHT * 0.85,
+                pygame.font.Font("font/pixel_font.ttf", 100),
+            ),
+            Text(
+                "YOU                          WIN!",
+                FIRE,
+                WIDTH // 2,
+                HEIGHT * 0.3,
+                pygame.font.Font("font/pixel_font.ttf", 170),
+            ),
+        ]
+        pygame.time.wait(1000)
+        pygame.mixer.music.stop()
+        pygame.mixer.music.unload()
+        self.music.play_music("victory")
+        pygame.mixer.music.set_volume(0.5)
+        self.image = pygame.image.load(
+            "images/enemies/level_4/dragon_skull.png"
+        ).convert()
+
+        while self.window_open:
+            self.screen.fill(BLACK)
+            self.screen.blit(self.image, (WIDTH * 0.21, 0))
+            for sprite in self.options:
+                sprite.draw(self.screen)
+            self.cursor.draw(self.screen)
+            self.cursor.update()
+            pygame.display.update()
+            self.clock.tick(FPS)
+            self.events_end_screen()
 
 
 if __name__ == "__main__":
