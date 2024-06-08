@@ -1,10 +1,9 @@
+import math
 import pygame
 
 pygame.init()
 # Colors
 LIGHTBLUE = (72, 128, 247)
-LIGHTBLUE2 = (102, 175, 194)
-YELLOW = (255, 255, 161)
 FIRE = (255, 160, 0)
 GOLD = (225, 194, 79)
 AZURE = (240, 255, 255)
@@ -13,13 +12,9 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
-GREEN = (34, 177, 76)
-PINK = (255, 174, 201)
 PANTONE = (98, 100, 102)
-CRIMSON = (220, 20, 60)
 
 WIDTH, HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
-
 ENEMIES_RESPAWN_TIME = 5000
 FPS = 60
 
@@ -30,10 +25,7 @@ BLOCK_LAYER = 2
 GROUND_LAYER = 1
 
 PLAYER_SPEED = 4
-
-
 # MAP  150x100xTILESIZE px
-
 tilemap = """
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 B..............TTT.................................................................................B
@@ -67,19 +59,19 @@ B.........TTTT................OOOOOOOOOOOOAAAAAAAAAAAAAOOOOO....TTTTTTTTTTTTTTD.
 B.........TTTD...........................OOOOOOOOOOOOOO......TTTTTTTTTTTTTTT.......................B
 B.........TTTT...........es...............................TTTTTTD..................................B
 B..........TTTT..........a...........s..................TTTTT............................ss........B
-B...........TTTT.....................ss...............TTTD.TT............................as........B
+B...........TTTT.....................ss...............TTTD.TT............................a.........B
 B...........DTTT......................................TTTTTT.......................................B
 B............TTT...................................DTTTTTTTT......ss...............................B
 B...aa........TTT..............TTT................TTTT...TTT.......a.........ss....................B
 B...a..........TTTTD.........TTTTTTT.......s...TTTTTTT...TTT.................a.....................B
 B...............TTTTT......TTTTTTTTTTD......s..TTTT.......TTT......................................B
 B................TTTTTTTTTTTT.....TTTTTTT....s.TTTD........TTTT....................................B
-B...................TTTTTTTD.........TTTTTTTTTTT.....s..s....TTTT..................................B
-B.......................................TTTTTTTT...ss.b.s.....TTTTT................................B
-B.........ea................................DTTTD...s..s.........TTTT..............................B
+B...................TTTTTTTD.........TTTTTTTTTTT........s....TTTT..................................B
+B...............................a.......TTTTTTTT...s..b.s.....TTTTT................................B
+B.........ea...................s..s.........DTTTD...s............TTTT..............................B
 B..........s.................................TTTT..................TTTT..............ss............B
-B.....................................s......TTTT....................TTT.............ss............B
-B......................................ss.....TTTT....................TTT..........................B
+B............................................TTTT....................TTT.............s.............B
+B.............................................TTTT....................TTT..........................B
 B........................................d....TTTT.....................TTT.........................B
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBTTTTBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBTTTTBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB..................................................B
@@ -105,7 +97,7 @@ B......W..........TTTT..W..........W....TTTT......TTTT.....wTTTT........RRRRRRRR
 B.....W..W.....R...TTTT....r...R.........TTTT....TTTT.....w.w.TTTT......RRRRRR...s.................B.....s....s.s.....................................B
 B....................TTTT.....s...........TTTTTTRTTT...........TTTTT....RRRRRR..s.......s...s......B....s..........s..................................B
 B...............sW.W..TTTT..s.........R....TTTTTTTT............TTTTT....RRRRR...s....s.......s.....B...................sssss..s.......................B
-B..............W.M.W.s.TTTTT..............TTTT...................TTTT..LLRRRR.....s....s.s.s..s....Bssssssssssssssssss.......s.ss.....s...s......s....B
+B..............W.M...s.TTTTT..............TTTT...................TTTT..LLRRRR.....s....s.s.s..s....Bssssssssssssssssss.......s.ss.....s...s......s....B
 B..................s..TTTTTTT...........TTTT............L........TTTTTLLLRRR...s...s..s.s.s.s......S.......................s.....ss...........s.......B
 B.............L.R...sTTTTTTTTT........TTTT.............LLL........TTTTTLLRRR...s..s.s.s.s....s.s...S...............s....s...........s....s.....s...s..B
 B............LL..s.s.TTTTLLLLTTTT......TTTT...........LLLLLL.R....L..TTTTRRRR.s..s.s.s.s.s..s......Bssssssssssssssssss.....E......s...........s.......B

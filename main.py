@@ -6,15 +6,17 @@ from entities import *
 from text import Text
 import random
 
-
+# Setting the position of the window to left top corner
 os.environ["SDL_VIDEO_WINDOW_POS"] = "%d, %d" % (0, 30)
-
+# setting global variable to check if the game has ended
 game_ended = 0
+# setting the flags for the window
 flags = pygame.FULLSCREEN | pygame.DOUBLEBUF
 
 
 class Game:
     def __init__(self):
+
         pygame.init()
         pygame.mixer.init()
         self.music = Music()
@@ -51,18 +53,47 @@ class Game:
         self.mana_cost = 10
 
     def create_tilemap(self):
+
+        self.health_bar = Health_bar(self, 10, 10, 300, 30, 10, "red", "green")
+        self.mana_bar = Bar(self, 10, 60, 300, 30, 10, "grey", LIGHTBLUE)
+        self.experience_bar = Exp_bar(self, 10, 105, 300, 30, 10, "grey", "yellow")
         """
+        1 level:
         B - BLock
         P - Player
         O - Object(Tree, water sticks etc.)
         D - Decorations
-        W - Water
+        A - Water
         T - Trail
+        Enemies:
+        e - Grey Mouse
+        a - Brown Mouse
+        s - White Mouse
+        b - Boss Mouse
+        2 level:
+        T- Trail
+        r - Small Rock
+        R - Big Rock
+        Enemies:
+        b - Desert Boarman
+        w - Desert Wolf
+        W - Desert Wartotaur
+        M - Desert Minotaur Boss
+        3 level:
+        T- Trail
+        s - Skull
+        H - Hole
+        L - Lava
+        Enemies:
+        i - Burnt Imp
+        u - Burnt Succubus
+        f - Burnt Fallen Angel
+        4 level:
+        T- Trail
+        s - Skull
+        Enemies:
+        E - Dragon
         """
-        self.health_bar = Health_bar(self, 10, 10, 300, 30, 10, "red", "green")
-        self.mana_bar = Bar(self, 10, 60, 300, 30, 10, "grey", LIGHTBLUE)
-        self.experience_bar = Exp_bar(self, 10, 105, 300, 30, 10, "grey", "yellow")
-
         for i, row in enumerate(tilemap):
             for j, column in enumerate(row):
 
@@ -576,6 +607,19 @@ class Game:
         self.create_tilemap()
 
     def events_game_over(self):
+        """
+        Handle events for the game over screen.
+
+        This method is responsible for handling events such as mouse clicks and quitting the game.
+        It sets the allowed event types to pygame.QUIT and pygame.MOUSEBUTTONDOWN.
+        It checks for mouse clicks on the game over screen options and performs the corresponding actions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN])
         global game_ended
         for event in pygame.event.get():
@@ -616,7 +660,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.music.play_sound("button_click")
                     self.player.basic_attack_level += 1
-                    self.player.level += 1
+
                     self.health_bar.remaining = self.health_bar.full
                     self.mana_bar.remaining = self.mana_bar.full
                     self.paused_game = 0
@@ -633,7 +677,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.music.play_sound("button_click")
                     self.player.ultimate_attack_level += 1
-                    self.player.level += 1
+
                     self.mana_cost = int(self.mana_cost * 1.25)
                     self.health_bar.remaining = self.health_bar.full
                     self.mana_bar.remaining = self.mana_bar.full
@@ -651,7 +695,6 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.music.play_sound("button_click")
                     self.player.speed_level += 1
-                    self.player.level += 1
                     self.player.player_speed = (
                         PLAYER_SPEED + self.player.speed_level // 4
                     )
@@ -672,7 +715,6 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.music.play_sound("button_click")
                     self.player.health_and_mana_level += 1
-                    self.player.level += 1
                     self.mana_bar.full += 10 * self.player.health_and_mana_level
                     self.mana_bar.regen += self.mana_bar.regen * 0.25
                     self.health_bar.full += (
@@ -692,6 +734,19 @@ class Game:
                 self.paused_game = 0
 
     def events_main_menu(self):
+        """
+        Handle events for the main menu.
+
+        This method is responsible for handling events related to the main menu of the game.
+        It checks for various events such as mouse clicks, keyboard inputs, and window close events.
+        Based on the events, it performs different actions such as changing button colors, playing sounds, and quitting the game.
+
+        Args:
+            self: The instance of the class.
+
+        Returns:
+            None
+        """
         pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -729,6 +784,18 @@ class Game:
                 self.buttons[1].color = DARK_GREY
 
     def events_in_game(self):
+        """
+        Handle the events that occur during the game.
+
+        This method is responsible for processing various events such as quitting the game,
+        shooting projectiles, using ultimate attacks, and gaining experience.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN])
         for event in pygame.event.get():
             keys = pygame.key.get_pressed()
@@ -807,6 +874,7 @@ class Game:
                 self.options[0].color = FIRE
 
     def cooldown(self):
+        # Cooldown for the basic attack
         if self.shoot_cooldown_count >= self.max_cooldown:
             self.shoot_cooldown_count = 0
         elif self.shoot_cooldown_count > 0:
@@ -817,7 +885,7 @@ class Game:
             self.health_bar.get()
 
     def update(self):
-
+        # Update everything
         self.cooldown()
         self.all_sprites.update()
         self.attacks.update()
@@ -830,6 +898,7 @@ class Game:
         self.cursor.update()
 
     def draw(self):
+        # Draw everything
         self.screen.fill(LIGHTBLUE)
         self.all_sprites.draw(self.screen)
         self.attacks.draw(self.screen)
@@ -844,6 +913,7 @@ class Game:
         pygame.display.update()
 
     def main(self):
+        # Main game loop
         while self.active_game:
 
             if self.paused_game:
@@ -857,6 +927,7 @@ class Game:
             self.game_over()
 
     def game_over(self):
+        # Game over screen
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
         self.options = [
             Text(
@@ -927,7 +998,7 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
 
         self.music.play_sound("level_up")
-
+        # All the options for the pause screen
         self.options = [
             Skill_up_bar(
                 self,
@@ -1062,7 +1133,9 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
 
     def end_screen(self):
+
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        # All the options for the end screen
         self.options = [
             Text(
                 "ADVENTURE AGAIN?",

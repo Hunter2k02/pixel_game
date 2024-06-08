@@ -753,6 +753,7 @@ class Attack(pygame.sprite.Sprite):
                             "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                         ),
                     )
+            # Play the sound effect for the attack based on the enemy type
             for sprite in hits:
                 if sprite.name[-5:] == "Mouse":
                     self.game.music.play_sound("mouse_sound")
@@ -1178,6 +1179,7 @@ class Ultimate_attack(Attack):
                         "font/pixel_font.ttf", 12 + int(self.damage * 0.5)
                     ),
                 )
+            # Play the appropriate sound effect based on the enemy type
             for sprite in hits:
                 if sprite.name[-5:] == "Mouse":
                     self.game.music.play_sound("mouse_sound")
@@ -1208,6 +1210,26 @@ class Ultimate_attack(Attack):
 
 
 class Enemy_attack(pygame.sprite.Sprite):
+    """
+    Represents an enemy attack in the game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the attack.
+        y (int): The y-coordinate of the attack.
+        enemy (Enemy): The enemy that initiated the attack.
+        width (int): The width of the attack.
+        height (int): The height of the attack.
+        animation_loop (int): The current animation frame.
+        direction (str): The direction the attack is facing.
+        damage (int): The damage inflicted by the attack.
+        angle (float): The angle between the player and the enemy.
+        dx (float): The change in x-coordinate per update.
+        dy (float): The change in y-coordinate per update.
+        spritesheet (Spritesheet): The spritesheet for the attack.
+        animation_speed (float): The speed of the animation.
+        rect (Rect): The rectangle representing the attack's position and size.
+    """
 
     def __init__(self, game, x, y, enemy):
         self.game = game
@@ -1228,7 +1250,7 @@ class Enemy_attack(pygame.sprite.Sprite):
         self.angle = math.atan2(
             self.game.player.rect.y - self.y, self.game.player.rect.x - self.x
         )
-
+        # Calculate the horizontal and vertical movement speed of the attack
         self.dx = math.cos(self.angle) * self.enemy.speed * 2
         self.dy = math.sin(self.angle) * self.enemy.speed * 2
 
@@ -1348,6 +1370,7 @@ class Enemy_attack(pygame.sprite.Sprite):
         hits = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
         if hits:
             for sprite in hits:
+                # If the player is hit by the enemy attack
                 if sprite.__class__.__name__ == "Player":
                     self.game.music.play_sound("player_hurt")
                     self.game.health_bar.lose(self.damage)
@@ -1365,6 +1388,7 @@ class Enemy_attack(pygame.sprite.Sprite):
             self.kill()
 
     def movement(self):
+        # Move the attack in the direction of the player
         self.rect.x = self.rect.x + int(self.dx) * 2
         self.rect.y = self.rect.y + int(self.dy) * 2
 
@@ -1804,7 +1828,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.attack_player()
 
     def collide(self, direction):
-        if self.dist < 600:
+        # Check for collisions with blocks in the game
+        if self.dist < (WIDTH + HEIGHT) // 4:
             if direction == "x":
                 hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
                 if hits:
@@ -1823,7 +1848,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def attack_player(self):
         # Attack the player if the enemy is within range
-        if self.dist < 600:
+        if self.dist < (WIDTH + HEIGHT) // 4:
             self.shoot_cooldown_count += 1
             if self.facing == "up":
                 Enemy_attack(self.game, self.rect.x, self.rect.y, self)
@@ -1835,12 +1860,13 @@ class Enemy(pygame.sprite.Sprite):
                 Enemy_attack(self.game, self.rect.x, self.rect.y, self)
 
     def movement(self):
+        # Move the enemy towards the player
         self.dist = math.hypot(
             self.game.player.rect.x - self.rect.x,
             self.game.player.rect.y - self.rect.y,
         )
 
-        if self.dist < 600:
+        if self.dist < (WIDTH + HEIGHT) // 4:
             if self.game.player.rect.x > self.rect.x:
 
                 self.rect.x += self.speed
@@ -1862,7 +1888,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.facing = "up"
 
     def animate(self):
-        if self.dist < 600:
+        # Animate the enemy based on its direction
+        if self.dist < (WIDTH + HEIGHT) // 4:
             if self.facing == "down":
 
                 self.image = self.down_animations[math.floor(self.animation_loop)]
@@ -1922,6 +1949,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.game.end_screen()
 
     def cooldown(self):
+        # Cooldown for the basic enemy's attack
         if self.shoot_cooldown_count >= self.max_cooldown_count:
             self.shoot_cooldown_count = 0
         elif self.shoot_cooldown_count > 0:
@@ -1929,6 +1957,35 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class Boss(Enemy):
+    """
+    Represents a boss enemy in the game.
+
+    Args:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the boss's initial position.
+        y (int): The y-coordinate of the boss's initial position.
+        enemy_spritesheet_path (str): The file path of the enemy spritesheet.
+        enemy_attack_spritesheet_path (str): The file path of the enemy attack spritesheet.
+        boss_attack_spritesheet_path (str): The file path of the boss attack spritesheet.
+        name (str): The name of the boss.
+        damage (int): The damage inflicted by the boss.
+        health (int): The health of the boss.
+        exp (int): The experience points gained by defeating the boss.
+        speed (int): The movement speed of the boss.
+        respawn_id (int, optional): The ID of the boss's respawn point.
+
+    Attributes:
+        boss_attack_spritesheet (Spritesheet): The spritesheet for boss attacks.
+        max_cooldown_count (int): The maximum cooldown count for regular attacks.
+        ultimate_cooldown_count (int): The current cooldown count for ultimate attacks.
+        ultimate_cooldown_max (int): The maximum cooldown count for ultimate attacks.
+
+    Methods:
+        update(): Updates the boss's state and behavior.
+        ultimate_attack_player(): Performs the boss's ultimate attack.
+        personalize(name): Personalizes the boss's attributes based on its name.
+    """
+
     def __init__(
         self,
         game,
@@ -2016,6 +2073,7 @@ class Boss(Enemy):
                 self.attack_player()
             if self.ultimate_cooldown_count == 0:
                 self.ultimate_attack_player()
+        # If the boss is a Dragon... and the player is in the final area
         elif self.name == "Dragon":
             self.cooldown()
             self.cooldown_ultimate()
@@ -2032,7 +2090,7 @@ class Boss(Enemy):
 
     def ultimate_attack_player(self):
         self.ultimate_cooldown_count += 1
-        if self.dist < 850:
+        if self.dist < ((WIDTH + HEIGHT) // 4) + 100:
             Boss_attack(self.game, self.rect.x, self.rect.y, self)
 
     def personalize(self, name):
@@ -2160,7 +2218,7 @@ class Boss(Enemy):
                     512, 64, self.width, self.height, WHITE
                 ),
             ]
-
+            # Scale the animations
             for i in range(9):
                 self.left_animations[i] = pygame.transform.scale(
                     self.left_animations[i], (128, 128)
@@ -2198,6 +2256,7 @@ class Boss(Enemy):
                 self.enemy_spritesheet.get_sprite(144, 384, 144, 128, BLACK),
                 self.enemy_spritesheet.get_sprite(288, 384, 144, 128, BLACK),
             ]
+            # Scale the animations
             for i in range(3):
                 self.left_animations[i] = pygame.transform.scale(
                     self.left_animations[i], (288, 256)
@@ -2221,6 +2280,19 @@ class Boss(Enemy):
 
 
 class Boss_attack(Enemy_attack):
+    """
+    Represents a boss attack in the game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the attack.
+        y (int): The y-coordinate of the attack.
+        enemy (Enemy): The enemy that initiated the attack.
+        damage (int): The damage inflicted by the attack.
+        image (pygame.Surface): The image of the attack.
+        animations (list): The list of animation frames for the attack.
+    """
+
     def __init__(self, game, x, y, enemy):
         super().__init__(game, x, y, enemy)
         self.damage = self.enemy.damage * 3
@@ -2275,6 +2347,24 @@ class Boss_attack(Enemy_attack):
 
 
 class Last_boss(Boss):
+    """
+    Represents the last boss in the game.
+
+    Args:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the boss's initial position.
+        y (int): The y-coordinate of the boss's initial position.
+        enemy_spritesheet_path (str): The file path to the enemy spritesheet.
+        enemy_attack_spritesheet_path (str): The file path to the enemy attack spritesheet.
+        boss_attack_spritesheet_path (str): The file path to the boss attack spritesheet.
+        name (str): The name of the boss.
+        damage (int): The damage inflicted by the boss.
+        health (int): The health points of the boss.
+        exp (int): The experience points gained by defeating the boss.
+        speed (int): The movement speed of the boss.
+        respawn_id (int, optional): The ID used for boss respawn. Defaults to None.
+    """
+
     def __init__(
         self,
         game,
@@ -2386,6 +2476,24 @@ class Last_boss(Boss):
 
 
 class Bar(pygame.sprite.Sprite):
+    """
+    Represents a bar entity in the game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the bar's position.
+        y (int): The y-coordinate of the bar's position.
+        w (int): The width of the bar.
+        h (int): The height of the bar.
+        full (int): The maximum value of the bar.
+        bg (tuple): The background color of the bar.
+        fg (tuple): The foreground color of the bar.
+        remaining (float): The current value of the bar.
+        regen (float): The regeneration rate of the bar.
+        color_1 (tuple): The color of the filled portion of the bar.
+        color_2 (tuple): The color of the empty portion of the bar.
+    """
+
     def __init__(self, game, x, y, w, h, full, bg, fg):
         self.game = game
         self.x = x
@@ -2431,6 +2539,22 @@ class Bar(pygame.sprite.Sprite):
 
 
 class Health_bar(Bar):
+    """
+    Represents a health bar in a game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the health bar.
+        y (int): The y-coordinate of the health bar.
+        w (int): The width of the health bar.
+        h (int): The height of the health bar.
+        full (int): The initial full value of the health bar.
+        bg (tuple): The background color of the health bar.
+        fg (tuple): The foreground color of the health bar.
+    Methods:
+        lose(amount): Decreases the player's health by the given amount.
+    """
+
     def __init__(self, game, x, y, w, h, full, bg, fg):
         super().__init__(game, x, y, w, h, full, bg, fg)
 
@@ -2447,23 +2571,62 @@ class Health_bar(Bar):
 
 
 class Exp_bar(Bar):
+    """
+    Represents an experience bar in a game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the experience bar.
+        y (int): The y-coordinate of the experience bar.
+        w (int): The width of the experience bar.
+        h (int): The height of the experience bar.
+        full (int): The maximum value of the experience bar.
+        bg (str): The background color of the experience bar.
+        fg (str): The foreground color of the experience bar.
+        remaining (int): The remaining experience points.
+
+    Methods:
+        lose(): Increases the player's level and updates other game attributes.
+        get(amount): Adds the given amount of experience points to the bar.
+    """
+
     def __init__(self, game, x, y, w, h, full, bg, fg):
         super().__init__(game, x, y, w, h, full, bg, fg)
         self.remaining = 0
 
     def lose(self):
-        self.full = self.full + int((self.game.player.level // 0.8) ** 2)
+        self.game.player.level += 1
+        self.game.player.basic_attack_damage += 1
+        self.game.mana_bar.full += 10
+        self.game.health_bar.full += 10
+        self.full = self.full + int((self.game.player.level // 0.65) ** 2)
 
     def get(self, amount):
         if self.remaining < self.full:
             self.remaining += amount
         if self.remaining >= self.full:
-            self.game.paused_game = 1
+            if self.game.player.level < 53:
+                self.game.paused_game = 1
             self.remaining = self.remaining - self.full
             self.lose()
 
 
 class Skill_up_bar(pygame.sprite.Sprite):
+    """
+    Represents a skill upgrade bar in a game.
+
+    Attributes:
+        game (Game): The game instance.
+        x (int): The x-coordinate of the skill bar.
+        y (int): The y-coordinate of the skill bar.
+        w (int): The width of the skill bar.
+        h (int): The height of the skill bar.
+        current (int): The current value of the skill bar.
+        full (int): The maximum value of the skill bar.
+        bg (tuple): The background color of the skill bar.
+        fg (tuple): The foreground color of the skill bar.
+    """
+
     def __init__(self, game, x, y, w, h, current, full, bg, fg):
         self.game = game
         self.groups = self.game.text
@@ -2508,6 +2671,16 @@ class Skill_up_bar(pygame.sprite.Sprite):
 
 
 class Cursor:
+    """
+    Represents a cursor object in the game.
+
+    Attributes:
+        game (Game): The game instance.
+        image (pygame.Surface): The image of the cursor.
+        x (int): The x-coordinate of the cursor.
+        y (int): The y-coordinate of the cursor.
+    """
+
     def __init__(self, game) -> None:
         self.game = game
         self.image = pygame.transform.scale(
@@ -2527,6 +2700,14 @@ class Cursor:
 
 
 class Music:
+    """
+    A class that represents the music and sound effects in the game.
+
+    Attributes:
+        music (dict): A dictionary mapping music names to their file paths.
+        sound (dict): A dictionary mapping sound effect names to their file paths.
+    """
+
     def __init__(self):
         self.music = {
             "main_menu": "sounds/Music/main_menu_music.ogg",
@@ -2534,7 +2715,7 @@ class Music:
             "level_2": "sounds/Music/level2_music.mp3",
             "level_3": "sounds/Music/level3_music.mp3",
             "boss_room": "sounds/Music/boss_room_music.flac",
-            "victory" : "sounds/Music/victory_music.mp3",
+            "victory": "sounds/Music/victory_music.mp3",
         }
         self.sound = {
             "button_click": pygame.mixer.Sound("sounds/Sound/button_sound.flac"),
@@ -2586,12 +2767,28 @@ class Music:
 
 
 class Spawner:
+    """
+    Initializes a new instance of the Spawner class.
+
+    Parameters:
+    - game (Game): The game instance.
+
+    Attributes:
+    - game (Game): The game instance.
+    - respawn_time (int): The time it takes for enemies to respawn.
+    - current (int): The current respawn time.
+    - hashmap_of_enemies (dict): A dictionary that maps enemy names to their positions.
+    - list_of_dead_enemies (list): A list of dead enemy respawn IDs.
+    - list_of_all_enemies (list): A list of all enemy instances in the game.
+    """
+
     def __init__(self, game):
 
         self.game = game
         self.respawn_time = ENEMIES_RESPAWN_TIME
 
         self.current = self.respawn_time
+        # A dictionary that maps enemy names to their positions
         self.hashmap_of_enemies = {
             "Grey Mouse": [],
             "Brown Mouse": [],
@@ -2606,9 +2803,11 @@ class Spawner:
             "Burnt Fallen Angel": [],
             "Dragon": [],
         }
-
+        # A list of dead enemy respawn IDs
         self.list_of_dead_enemies = []
+        # A list of all enemy instances in the game
         self.list_of_all_enemies = [enemy for enemy in self.game.enemies.sprites()]
+        # Initialize the hashmap of enemies
         for i in range(len(self.list_of_all_enemies)):
             if self.list_of_all_enemies[i].name == "Grey Mouse":
                 self.hashmap_of_enemies["Grey Mouse"].append(
@@ -2744,25 +2943,26 @@ class Spawner:
                 )
 
     def add(self, respawn_id):
+        # Add the respawn ID to the list of dead enemies
         self.list_of_dead_enemies.append(respawn_id)
 
     def update(self):
-
+        # Spawns dead enemies when the respawn time is reached
         if self.current == 0:
-
+            # Checks if there are any dead enemies
             if self.list_of_dead_enemies:
 
                 for i in range(len(self.list_of_dead_enemies)):
 
                     for j in range(len(self.list_of_all_enemies)):
-
+                        # Checks if the dead enemy's respawn ID matches the enemy's respawn ID
                         if (
                             self.list_of_dead_enemies[i][0]
                             == self.list_of_all_enemies[j].respawn_id[0]
                             and self.list_of_dead_enemies[i][1]
                             == self.list_of_all_enemies[j].respawn_id[1]
                         ):
-
+                            # Spawns the dead enemy relative to the player's position
                             if self.list_of_dead_enemies[i][0] == "e":
 
                                 Enemy(
@@ -3074,8 +3274,9 @@ class Spawner:
                                     3.5,
                                     respawn_id=self.list_of_dead_enemies[i],
                                 )
-
+                
                 self.list_of_dead_enemies = []  # Reset the list
                 self.current = self.respawn_time  # Reset the timer
         else:
+            # Decrement the timer
             self.current -= 1

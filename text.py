@@ -4,6 +4,21 @@ from config import *
 
 
 class Text:
+    """
+    A class representing text to be displayed on the screen.
+
+    Attributes:
+        text (str): The text to be displayed.
+        color (tuple): The color of the text in RGB format.
+        x (int): The x-coordinate of the text's position.
+        y (int): The y-coordinate of the text's position.
+        font (pygame.font.Font): The font used for the text.
+
+    Methods:
+        update(): Updates the text's image and position.
+        draw(surface): Draws the text on the given surface.
+    """
+
     def __init__(self, text, color, x, y, font):
         self.text = str(text)
         self.color = color
@@ -22,6 +37,24 @@ class Text:
 
 
 class Temporary_text_experience(pygame.sprite.Sprite):
+    """
+    A class representing temporary text experience in a pygame game.
+
+    Attributes:
+        game (Game): The game instance.
+        text (str): The text to be displayed.
+        color (tuple): The color of the text.
+        x (int): The x-coordinate of the text.
+        y (int): The y-coordinate of the text.
+        font (Font): The font used for the text.
+        end_time (int): The time when the text should disappear.
+        amount (int): The amount of text experiences.
+
+    Methods:
+        update(): Updates the text experience.
+        draw(screen): Draws the text on the screen.
+    """
+
     def __init__(self, game, text, color, x, y, font):
         self.game = game
         self._layer = TEXT_LAYER
@@ -56,6 +89,24 @@ class Temporary_text_experience(pygame.sprite.Sprite):
 
 
 class Temporary_text_damage(pygame.sprite.Sprite):
+    """
+    A class representing temporary text damage in a game.
+
+    Attributes:
+        game (Game): The game instance.
+        text (str): The text to be displayed.
+        color (tuple): The color of the text.
+        x (int): The x-coordinate of the text.
+        y (int): The y-coordinate of the text.
+        font (Font): The font used for the text.
+        end_time (int): The time when the text should disappear.
+        amount (int): The amount of damage.
+
+    Methods:
+        update(): Updates the state of the text damage.
+        draw(screen): Draws the text on the screen.
+    """
+
     def __init__(self, game, text, color, x, y, font):
         self.game = game
         self._layer = TEXT_LAYER
@@ -83,6 +134,19 @@ class Temporary_text_damage(pygame.sprite.Sprite):
 
 
 class Level_up_text(pygame.sprite.Sprite):
+    """
+    A class representing a level up text in a game.
+
+    Attributes:
+        game (Game): The game instance.
+        text (str): The text to be displayed.
+        color (tuple): The color of the text.
+        x (int): The x-coordinate of the text position.
+        y (int): The y-coordinate of the text position.
+        font (Font): The font used for rendering the text.
+        amount (int): The amount of the text.
+        flag (int): A flag indicating whether the text should be displayed or not.
+    """
 
     def __init__(self, game, text, color, x, y, font):
         self.game = game
@@ -113,6 +177,22 @@ class Level_up_text(pygame.sprite.Sprite):
 
 
 class Show_FPS(Text):
+    """
+    A class that represents a text object displaying the frames per second (FPS) in a game.
+
+    Attributes:
+        game (Game): The game object.
+        text (str): The text to be displayed.
+        color (tuple): The color of the text.
+        x (int): The x-coordinate of the text position.
+        y (int): The y-coordinate of the text position.
+        font (Font): The font used for rendering the text.
+
+    Methods:
+        update(): Updates the text and image based on the current FPS.
+        draw(surface): Draws the text on the given surface.
+    """
+
     def __init__(self, game, text, color, x, y, font):
         super().__init__(text, color, x, y, font)
         self.game = game
