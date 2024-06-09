@@ -44,7 +44,7 @@ class Game:
         )
         self.shoot_cooldown_count = 0
         self.max_cooldown = 50
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
         self.character_spritesheet = Spritesheet("images/player/player.png")
         self.terrain_spritesheet = Spritesheet("images/terrain/terrain.png")
         self.attack_spritesheet = Spritesheet("images/missles/spikes.png")
@@ -589,8 +589,8 @@ class Game:
                             "Dragon",
                             300,
                             9999,
-                            9999,
-                            6,
+                            19999,
+                            7,
                         )
 
         self.player = Player(self, WIDTH // 128, HEIGHT // 128)
@@ -776,6 +776,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.music.play_sound("button_click")
                     pygame.mixer.music.stop()
+                    pygame.time.wait(500) #Needed for button click sound before exiting program
                     pygame.quit()
                     sys.exit()
 
@@ -928,7 +929,7 @@ class Game:
 
     def game_over(self):
         # Game over screen
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
         self.options = [
             Text(
                 "Retry",
@@ -967,7 +968,7 @@ class Game:
             self.events_game_over()
 
     def intro_screen(self):
-        self.screen = pygame.display.set_mode((800, 400), depth=8)
+        self.screen = pygame.display.set_mode((800, 400))
         self.sky_surface = pygame.image.load("images/backgrounds/clouds.jpg").convert()
         self.ground_surface = pygame.image.load(
             "images/backgrounds/ground.png"
@@ -995,7 +996,7 @@ class Game:
             self.clock.tick(FPS)
 
     def pause_screen(self):
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
 
         self.music.play_sound("level_up")
         # All the options for the pause screen
@@ -1130,11 +1131,11 @@ class Game:
 
         for sprite in self.options:
             sprite.kill()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
 
     def end_screen(self):
 
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags, 8)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
         # All the options for the end screen
         self.options = [
             Text(
